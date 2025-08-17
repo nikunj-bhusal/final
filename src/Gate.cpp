@@ -2,7 +2,51 @@
 
 #include <stdexcept>
 
-#include "Configuration.h"
+namespace UIConstants {
+constexpr float LEFT_MARGIN = 50.f;
+constexpr float TOP_MARGIN = 40.f;
+constexpr float SPACING = 25.f;
+constexpr float OUTLINE_THICKNESS = 2.f;
+constexpr float TITLE_HEIGHT = 40.f;
+constexpr float SECTION_SPACING = 30.f;
+constexpr float LINE_HEIGHT = 20.f;
+constexpr float SECTION_WIDTH = 280.f;
+constexpr float BOX_WIDTH = 180.f;
+constexpr float BOX_HEIGHT = 60.f;
+constexpr float BOX_Y_SPACING = BOX_HEIGHT + SPACING;
+constexpr float FONT_TITLE = 20;
+constexpr float FONT_LABEL = 18;
+constexpr float FONT_INSTRUCTION = 18;
+constexpr float FONT_CONTENT = 18;
+constexpr float CELL_PADDING = 10.f;
+constexpr float GRID_LINE_THICKNESS = 2.f;
+constexpr float GRID_SIZE = 50.f;
+constexpr float ZOOM_IN_FACTOR = 0.95f;
+constexpr float ZOOM_OUT_FACTOR = 1.05f;
+
+// const sf::Color COLOR_SELECTED = sf::Color::Yellow;
+// const sf::Color COLOR_HOVERED = sf::Color(220, 220, 220);
+// const sf::Color COLOR_DEFAULT = sf::Color::White;
+// const sf::Color COLOR_OUTLINE = sf::Color::Black;
+// const sf::Color COLOR_BG = sf::Color(200, 200, 200, 200);
+// const sf::Color COLOR_TITLE_BG = sf::Color::Black;
+// const sf::Color COLOR_TITLE_TEXT = sf::Color::White;
+// const sf::Color COLOR_LABEL_TEXT = sf::Color::Black;
+// const sf::Color COLOR_INSTR_TEXT = sf::Color::Black;
+// const sf::Color COLOR_PANEL_BG = sf::Color(220, 220, 220, 200);
+// const sf::Color COLOR_CONTENT_TEXT = sf::Color::Black;
+// const sf::Color COLOR_INPUT_BG = sf::Color(255, 255, 200);
+// const sf::Color COLOR_EXPRESSION_BG = sf::Color(200, 255, 200);
+// const sf::Color COLOR_TRUTH_BG = sf::Color(200, 200, 255);
+// const sf::Color GRID_COLOR = sf::Color(60, 60, 60);
+// const sf::Color PIN_OUTLINE_COLOR = sf::Color::Black;
+// const sf::Color PIN_HIGH_COLOR = sf::Color::Red;
+// const sf::Color PIN_LOW_COLOR = sf::Color::White;
+// const sf::Color GATE_SELECTED_OUTLINE = sf::Color::Yellow;
+// const sf::Color GATE_DEFAULT_OUTLINE = sf::Color::Black;
+// const sf::Color GATE_DEFAULT_FILL = sf::Color(200, 200, 200);
+// const sf::Color sf::Color(128, 128, 128) = sf::Color(128, 128, 128);
+}  // namespace UIConstants
 
 using namespace UIConstants;
 
@@ -11,21 +55,21 @@ Gate::Gate(GateType type, sf::Vector2f position, int persistentLabel) : type(typ
     shape.setSize({50.f, 50.f});
     shape.setPosition(position);
     shape.setOutlineThickness(OUTLINE_THICKNESS);
-    shape.setOutlineColor(GATE_DEFAULT_OUTLINE);
+    shape.setOutlineColor(sf::Color::Black);
 
     switch (type) {
         case GateType::INPUT:
         case GateType::OUTPUT:
-            shape.setFillColor(GATE_IO_FILL);
+            shape.setFillColor(sf::Color(128, 128, 128));
             break;
         default:
-            shape.setFillColor(GATE_DEFAULT_FILL);
+            shape.setFillColor(sf::Color(200, 200, 200));
             break;
     }
 }
 
 void Gate::setFont(const sf::Font &font) {
-    if (font.getInfo().family.empty()) return;  // Basic validation
+    if (font.getInfo().family.empty()) return;
     currentFont = &font;
 }
 
@@ -34,7 +78,7 @@ void Gate::draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Ga
 
     if (selected) {
         gateShape.setOutlineThickness(OUTLINE_THICKNESS * 2);
-        gateShape.setOutlineColor(GATE_SELECTED_OUTLINE);
+        gateShape.setOutlineColor(sf::Color::Yellow);
     }
 
     window.draw(gateShape);
@@ -45,11 +89,11 @@ void Gate::draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Ga
     // Draw pins
     sf::CircleShape pin(6.f);
     pin.setOutlineThickness(1.f);
-    pin.setOutlineColor(PIN_OUTLINE_COLOR);
+    pin.setOutlineColor(sf::Color::Black);
 
     // Output pin (red if HIGH, white if LOW)
     if (type != GateType::OUTPUT) {
-        pin.setFillColor(state ? PIN_HIGH_COLOR : PIN_LOW_COLOR);
+        pin.setFillColor(state ? sf::Color::Red : sf::Color::White);
         sf::Vector2f outPinPos = getOutputPinPosition();
         pin.setPosition(outPinPos - sf::Vector2f{6.f, 6.f});
         window.draw(pin);
@@ -68,7 +112,7 @@ void Gate::draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Ga
     // Input pins
     if (type != GateType::INPUT) {
         int inputCount = (type == GateType::NOT || type == GateType::OUTPUT) ? 1 : 2;
-        pin.setFillColor(PIN_LOW_COLOR);
+        pin.setFillColor(sf::Color::White);
 
         for (int i = 0; i < inputCount; ++i) {
             sf::Vector2f inPinPos = getInputPinPosition(i);
@@ -132,7 +176,7 @@ sf::Vector2f Gate::getOutputPinPosition() const {
 void Gate::setState(bool state) {
     this->state = state;
     if (type == GateType::INPUT || type == GateType::OUTPUT) {
-        shape.setFillColor(state ? PIN_HIGH_COLOR : GATE_IO_FILL);
+        shape.setFillColor(state ? sf::Color::Red : sf::Color(128, 128, 128));
     }
 }
 
@@ -168,7 +212,7 @@ void Gate::drawGateLabel(sf::RenderWindow &window, size_t gateIndex, const std::
 
     try {
         sf::Text text(*currentFont, getGateTypeString(gateIndex, gates), FONT_CONTENT);
-        text.setFillColor(COLOR_CONTENT_TEXT);
+        text.setFillColor(sf::Color::Black);
 
         sf::FloatRect textBounds = text.getLocalBounds();
         text.setOrigin({textBounds.size.x / 2.f, textBounds.size.y / 2.f});

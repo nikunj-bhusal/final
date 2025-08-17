@@ -1,20 +1,18 @@
-#include <atomic>
+// engine/Simulator.cpp
 
+#include "Simulator.hpp"
+
+#include <iostream>
 // Global selection info for pin highlighting
 int g_selectedGate = -1;
 int g_selectedPin = -100;
-// engine/Simulator.cpp
-
-#include <iostream>
-
-#include "Configuration.h"
-#include "Simulator.hpp"
 
 Simulator::Simulator() {}
 
 void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &window, const sf::View &view, GateType selectedGateType) {
     if (const auto *clicked = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (clicked->button == sf::Mouse::Button::Left) {
+            sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
             sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
             sf::Vector2f mousePos{static_cast<float>(mousePixel.x), static_cast<float>(mousePixel.y)};
             if (ui.getShowExpression()) {
@@ -41,10 +39,10 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
                     return;
                 }
             }
-            if (mousePos.x <= WindowConfig::getPaletteSize().x) return;
+            if (mousePos.x <= desktop.size.x * 0.18f) return;
             // Prevent gate placement in right panel region
             float windowWidth = window.getSize().x;
-            float rightPanelStart = windowWidth * (1.0f - WindowConfig::RIGHT_PANEL_SCALE);
+            float rightPanelStart = windowWidth * (0.75f);
             if (mousePos.x >= rightPanelStart) return;
             sf::Vector2f worldPos = window.mapPixelToCoords(mousePixel, view);
             bool hitGate = false;

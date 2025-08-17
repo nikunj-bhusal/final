@@ -43,12 +43,13 @@ const sf::Color GATE_DEFAULT_FILL = sf::Color(200, 200, 200);
 const sf::Color GATE_IO_FILL = sf::Color(128, 128, 128);
 }  // namespace UIConstants
 
-sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+// sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 
 using namespace UIConstants;
 const float BOX_Y_START = BOX_Y_SPACING + TOP_MARGIN;
 
 ComponentPalette::ComponentPalette() {
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     sf::Vector2f paletteSize = {desktop.size.x * 0.18f, desktop.size.y * 1.f};
     uiView.setSize(paletteSize);
     uiView.setCenter(paletteSize / 2.f);
@@ -183,6 +184,7 @@ void ComponentPalette::draw(sf::RenderWindow &window) {
     window.setView(uiView);
 
     // Background
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     sf::RectangleShape bg({desktop.size.x * 1.f, desktop.size.y * 1.f});
     bg.setFillColor(COLOR_BG);
     bg.setPosition({0.f, 0.f});

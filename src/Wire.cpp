@@ -3,9 +3,6 @@
 // engine/Wire.cpp
 #include "Wire.hpp"
 
-#include "Configuration.h"
-using namespace UIConstants;
-
 Wire::Wire(size_t srcGate, int srcPin, size_t dstGate, int dstPin) : srcGate(srcGate), srcPin(srcPin), dstGate(dstGate), dstPin(dstPin) {
     line = sf::VertexArray(sf::PrimitiveType::Lines, 2);
     line[0].color = sf::Color::Black;

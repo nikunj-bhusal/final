@@ -2,10 +2,6 @@
 
 #include <algorithm>
 
-#include "Configuration.h"
-
-using namespace UIConstants;
-
 void Selection::cancelSelection(Circuit& circuit) {
     selectedGate = std::numeric_limits<size_t>::max();
     selectedPin = -1;

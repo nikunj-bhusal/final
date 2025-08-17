@@ -2,10 +2,6 @@
 
 #include <sstream>
 
-#include "Configuration.h"
-
-using namespace UIConstants;
-
 namespace TableGrid {
 std::vector<int> calculateColumnWidths(const std::vector<std::string> &headers, int numRows) {
     std::vector<int> widths;

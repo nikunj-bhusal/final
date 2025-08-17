@@ -79,6 +79,7 @@
     "ranges": "cpp",
     "stack": "cpp",
     "cinttypes": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "fstream": "cpp"
   }
 }
