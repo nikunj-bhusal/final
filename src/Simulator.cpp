@@ -111,13 +111,13 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
                         exprProc.generateExpressionTruthTable(ui);
                         ui.setCurrentExpression(exprProc.simplifyExpression(), activeField);
                         ui.setShowExpression(true, activeField);
-                        ui.setupUITexts();
+                        ui.initializeUITexts();
                     }
                 } else if ((std::isalpha(c) && std::tolower(c) != 'o') || c == '.' || c == '+' || c == '~' || c == '^' || c == '(' || c == ')') {
                     inp += c;
                 }
                 ui.setInputExpression(inp, activeField);
-                ui.setupUITexts();
+                ui.initializeUITexts();
             }
         }
     }
@@ -154,7 +154,7 @@ void Simulator::generateLogicalExpression() {
         ui.setInputExpression("", 2);
         ui.setShowExpression(false, 1);
         ui.setShowExpression(false, 2);
-        ui.setupUITexts();
+        ui.initializeUITexts();
         return;
     }
     std::map<size_t, std::string> expressions;
@@ -173,7 +173,7 @@ void Simulator::generateLogicalExpression() {
         }
     }
     ui.setShowExpression(true);
-    ui.setupUITexts();
+    ui.initializeUITexts();
 }
 
 void Simulator::clearCircuit() {
