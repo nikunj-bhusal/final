@@ -17,6 +17,7 @@ class Gate {
     const sf::Font *currentFont = nullptr;
 
     void drawGateLabel(sf::RenderWindow &window, size_t gateIndex, const std::vector<Gate> &gates) const;
+    void drawPinHighlight(sf::RenderWindow &window, sf::Vector2f pinPos) const;
 
    public:
     Gate(GateType type, sf::Vector2f position, int persistentLabel);
