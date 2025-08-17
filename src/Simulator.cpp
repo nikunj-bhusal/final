@@ -1,9 +1,7 @@
-// engine/Simulator.cpp
-
 #include "Simulator.hpp"
 
-#include <iostream>
-// Global selection info for pin highlighting
+#include <chrono>
+
 int g_selectedGate = -1;
 int g_selectedPin = -100;
 
@@ -40,7 +38,6 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
                 }
             }
             if (mousePos.x <= desktop.size.x * 0.18f) return;
-            // Prevent gate placement in right panel region
             float windowWidth = window.getSize().x;
             float rightPanelStart = windowWidth * (0.75f);
             if (mousePos.x >= rightPanelStart) return;
@@ -129,7 +126,6 @@ void Simulator::update() {
 }
 
 void Simulator::draw(sf::RenderWindow &window) const {
-    // Set global selection info for pin highlighting
     g_selectedGate = (int)selection.getSelectedGate();
     g_selectedPin = selection.getSelectedPin();
     circuit.drawAllGates(window);

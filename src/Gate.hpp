@@ -10,9 +10,9 @@ class Gate {
     GateType type;
     sf::Vector2f position;
     sf::RectangleShape shape;
-    bool state = false;  // false -> LOW, true -> HIGH
+    bool state = false;
     bool selected = false;
-    int persistentLabel = -1;  // Unique label/id for logic and display
+    int persistentLabel = -1;
 
     const sf::Font *currentFont = nullptr;
 
@@ -28,19 +28,15 @@ class Gate {
     void draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Gate> &gates, int selectedPin = -100) const;
     bool evaluate(const std::vector<bool> &inputs) const;
 
-    // Pin positions
     sf::Vector2f getInputPinPosition(int index) const;
     sf::Vector2f getOutputPinPosition() const;
 
-    // State
     void setState(bool state);
 
-    // Getters
     sf::FloatRect getBounds() const;
     bool getState() const;
     GateType getType() const;
     std::string getGateTypeString(size_t gateIndex, const std::vector<Gate> &gates) const;
 
-    // Selection
     void setSelected(bool isSelected);
 };

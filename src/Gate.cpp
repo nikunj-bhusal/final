@@ -1,7 +1,5 @@
 #include "Gate.hpp"
 
-#include <stdexcept>
-
 Gate::Gate(GateType type, sf::Vector2f position, int persistentLabel) : type(type), position(position), persistentLabel(persistentLabel) {
     shape.setSize({100.f, 70.f});
     shape.setPosition(position);
@@ -34,27 +32,22 @@ void Gate::draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Ga
 
     window.draw(gateShape);
 
-    // Label
     drawGateLabel(window, gateIndex, gates);
 
-    // Draw pins
     sf::CircleShape pin(6.f);
     pin.setOutlineThickness(1.f);
     pin.setOutlineColor(sf::Color::Black);
 
-    // Output pin (red if HIGH, white if LOW)
     if (type != GateType::OUTPUT) {
         pin.setFillColor(state ? sf::Color::Red : sf::Color::White);
         sf::Vector2f outPinPos = getOutputPinPosition();
         pin.setPosition(outPinPos - sf::Vector2f{6.f, 6.f});
         window.draw(pin);
-        // Highlight if selected
         if (selectedPin == -1) {
             drawPinHighlight(window, outPinPos);
         }
     }
 
-    // Input pins
     if (type != GateType::INPUT) {
         int inputCount = (type == GateType::NOT || type == GateType::OUTPUT) ? 1 : 2;
         pin.setFillColor(sf::Color::White);
@@ -63,7 +56,6 @@ void Gate::draw(sf::RenderWindow &window, size_t gateIndex, const std::vector<Ga
             sf::Vector2f inPinPos = getInputPinPosition(i);
             pin.setPosition(inPinPos - sf::Vector2f{6.f, 6.f});
             window.draw(pin);
-            // Highlight if selected
             if (selectedPin == i) {
                 drawPinHighlight(window, inPinPos);
             }
@@ -94,7 +86,6 @@ bool Gate::evaluate(const std::vector<bool> &inputs) const {
                 return false;
         }
     } catch (const std::out_of_range &) {
-        // Handle invalid input access safely
         return false;
     }
 }
@@ -103,14 +94,12 @@ sf::FloatRect Gate::getBounds() const { return shape.getGlobalBounds(); }
 
 sf::Vector2f Gate::getInputPinPosition(int pinIndex) const {
     if (type == GateType::NOT || type == GateType::OUTPUT) {
-        return position + sf::Vector2f{0.f, 35.f};  // single input (center left)
+        return position + sf::Vector2f{0.f, 35.f};
     }
-    return position + sf::Vector2f{0.f, (pinIndex == 0) ? 20.f : 50.f};  // two inputs
+    return position + sf::Vector2f{0.f, (pinIndex == 0) ? 20.f : 50.f};
 }
 
-sf::Vector2f Gate::getOutputPinPosition() const {
-    return position + sf::Vector2f{100.f, 35.f};  // right center
-}
+sf::Vector2f Gate::getOutputPinPosition() const { return position + sf::Vector2f{100.f, 35.f}; }
 
 void Gate::setState(bool state) {
     this->state = state;
@@ -148,20 +137,12 @@ std::string Gate::getGateTypeString(size_t gateIndex, const std::vector<Gate> &g
 
 void Gate::drawGateLabel(sf::RenderWindow &window, size_t gateIndex, const std::vector<Gate> &gates) const {
     if (!currentFont) return;
-
-    try {
-        sf::Text text(*currentFont, getGateTypeString(gateIndex, gates), 16);
-        text.setFillColor(sf::Color::Black);
-
-        sf::FloatRect textBounds = text.getLocalBounds();
-        text.setOrigin({textBounds.size.x / 2.f, textBounds.size.y / 2.f});
-        text.setPosition(position + sf::Vector2f{50.f, 35.f});  // center of gate
-
-        window.draw(text);
-    } catch (const std::exception &) {
-        // Safely handle any SFML exceptions
-        return;
-    }
+    sf::Text text(*currentFont, getGateTypeString(gateIndex, gates), 16);
+    text.setFillColor(sf::Color::Black);
+    sf::FloatRect textBounds = text.getLocalBounds();
+    text.setOrigin({textBounds.size.x / 2.f, textBounds.size.y / 2.f});
+    text.setPosition(position + sf::Vector2f{50.f, 35.f});
+    window.draw(text);
 }
 
 void Gate::drawPinHighlight(sf::RenderWindow &window, sf::Vector2f pinPos) const {

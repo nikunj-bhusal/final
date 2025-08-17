@@ -17,7 +17,6 @@ class Circuit {
     int nextOutputLabel = 0;
     const sf::Font* currentFont = nullptr;
 
-    // Helper function to detect cycles in expression evaluation
     bool hasCycle(size_t startGate, std::vector<bool>& visited, std::vector<bool>& inStack) const;
 
    public:

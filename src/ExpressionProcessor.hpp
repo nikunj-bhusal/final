@@ -17,7 +17,6 @@ class ExpressionProcessor {
     std::map<char, bool> varValues;
     std::vector<bool> minterms;
 
-    // Basic expression processing methods
     void removeDuplicateVariables();
     bool isOperator(char c);
     int precedence(char op);
@@ -30,7 +29,6 @@ class ExpressionProcessor {
     std::string cleanExpression(const std::string &infix);
     std::string simplifyDoubleNegations(const std::string &infix);
 
-    // K-Map specific methods
     std::vector<int> getGrayCodeOrder(int numVars);
     bool adjacentInKMap(int a, int b, int numVars);
     std::set<std::string> findPrimeImplicantsKMap();
@@ -38,13 +36,11 @@ class ExpressionProcessor {
     std::string generateExactEquation();
     std::string simplifyExpressionKMap();
 
-    // Helper methods to reduce redundancy
     bool setupExpressionAnalysis(const std::string &expr, UIManager &ui, std::vector<std::string> &table);
     void generateTableStructure(const std::vector<std::string> &headers, int numRows, std::vector<std::string> &table);
     bool validateCircuitForTruthTable(const Circuit &circuit, UIManager &ui, std::vector<std::string> &table, std::vector<size_t> &connectedInputs,
                                       std::vector<size_t> &outputs);
 
-    // Legacy methods (kept for compatibility)
     bool differsByOneBit(const std::string &a, const std::string &b);
     std::string combineTerms(const std::string &a, const std::string &b);
 
@@ -53,7 +49,7 @@ class ExpressionProcessor {
     const std::string &getExpression() const { return expression; }
     void generateTruthTable(const Circuit &circuit, UIManager &ui);
     void generateExpressionTruthTable(UIManager &ui);
-    std::string simplifyExpression() { return simplifyExpressionKMap(); }  // Use K-Map method
+    std::string simplifyExpression() { return simplifyExpressionKMap(); }
     void generateLogicalExpression(const Circuit &circuit, UIManager &ui);
     void readExpression();
     void generateCircuitFromExpression(const std::string &expr);

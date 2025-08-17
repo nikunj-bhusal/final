@@ -1,11 +1,8 @@
-// App.cpp
 #include "App.hpp"
-
-#include <iostream>
 
 App::App() : window(sf::VideoMode::getDesktopMode(), "Digital Logic Suite"), simulator(), canvas(simulator), palette() {
     if (!font.openFromFile("src/assets/fonts/poppins.ttf")) {
-        std::cerr << "Error loading font" << std::endl;
+        return;
     }
     simulator.setFont(font);
     palette.setFont(font);

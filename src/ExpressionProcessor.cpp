@@ -34,7 +34,7 @@ std::string generateRow(const std::vector<std::string> &cells, const std::vector
     }
     return row;
 }
-}  // namespace TableGrid
+}
 
 void ExpressionProcessor::removeDuplicateVariables() {
     std::sort(variables.begin(), variables.end());
@@ -180,7 +180,6 @@ std::string ExpressionProcessor::getBinaryString(int num, int length) {
     return binary;
 }
 
-// K-Map Gray code ordering for up to 4 variables
 std::vector<int> ExpressionProcessor::getGrayCodeOrder(int numVars) {
     std::vector<int> order;
     int size = 1 << numVars;
@@ -190,13 +189,12 @@ std::vector<int> ExpressionProcessor::getGrayCodeOrder(int numVars) {
             order.push_back(i);
         }
     } else if (numVars == 2) {
-        order = {0, 1, 3, 2};  // 00, 01, 11, 10
+        order = {0, 1, 3, 2};
     } else if (numVars == 3) {
-        order = {0, 1, 3, 2, 6, 7, 5, 4};  // 000, 001, 011, 010, 110, 111, 101, 100
+        order = {0, 1, 3, 2, 6, 7, 5, 4};
     } else if (numVars == 4) {
         order = {0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8};
     } else {
-        // For more than 4 variables, fall back to binary order
         for (int i = 0; i < size; i++) {
             order.push_back(i);
         }
@@ -204,21 +202,17 @@ std::vector<int> ExpressionProcessor::getGrayCodeOrder(int numVars) {
     return order;
 }
 
-// Check if two minterms differ by exactly one bit
 bool ExpressionProcessor::adjacentInKMap(int a, int b, int numVars) {
     int diff = a ^ b;
-    // Check if diff is a power of 2 (exactly one bit different)
     return diff > 0 && (diff & (diff - 1)) == 0;
 }
 
-// Find prime implicants using K-Map method
 std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
     if (variables.empty() || minterms.empty()) return {};
 
     int numVars = variables.size();
     std::set<int> trueMinterms;
 
-    // Collect all minterms that evaluate to true
     for (size_t i = 0; i < minterms.size(); i++) {
         if (minterms[i]) {
             trueMinterms.insert(i);
@@ -230,21 +224,16 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
     std::set<std::string> primeImplicants;
     std::set<int> covered;
 
-    // For K-Map simplification, we need to find adjacent groups
-    // This is a simplified version - for full K-Map we'd need proper 2D/3D/4D grouping
 
-    // Step 1: Find all possible groupings (powers of 2: 1, 2, 4, 8, etc.)
     for (int groupSize = 1; groupSize <= (1 << numVars); groupSize *= 2) {
         std::vector<std::set<int>> groups;
 
-        // Try to form groups of current size
         for (int start : trueMinterms) {
             if (covered.count(start)) continue;
 
             std::set<int> group;
             group.insert(start);
 
-            // Try to build a group of size groupSize
             std::vector<int> candidates(trueMinterms.begin(), trueMinterms.end());
 
             for (int size = 1; size < groupSize && !candidates.empty(); size *= 2) {
@@ -252,7 +241,6 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
                 for (int candidate : candidates) {
                     if (group.count(candidate)) continue;
 
-                    // Check if candidate can be added to group (forms rectangular block in K-map)
                     bool canAdd = false;
                     for (int member : group) {
                         if (adjacentInKMap(member, candidate, numVars)) {
@@ -272,7 +260,6 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
             }
 
             if (group.size() == groupSize) {
-                // Check if this group covers only true minterms
                 bool validGroup = true;
                 for (int member : group) {
                     if (!trueMinterms.count(member)) {
@@ -287,7 +274,6 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
             }
         }
 
-        // Convert groups to prime implicants
         for (const auto &group : groups) {
             if (group.size() == groupSize) {
                 std::string implicant = generateImplicantFromGroup(group, numVars);
@@ -301,7 +287,6 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
         }
     }
 
-    // Add any remaining uncovered minterms as individual implicants
     for (int minterm : trueMinterms) {
         if (!covered.count(minterm)) {
             primeImplicants.insert(getBinaryString(minterm, numVars));
@@ -311,13 +296,11 @@ std::set<std::string> ExpressionProcessor::findPrimeImplicantsKMap() {
     return primeImplicants;
 }
 
-// Generate implicant string from a group of minterms
 std::string ExpressionProcessor::generateImplicantFromGroup(const std::set<int> &group, int numVars) {
     if (group.empty()) return "";
 
-    std::string implicant(numVars, 'X');  // X means don't care
+    std::string implicant(numVars, 'X');
 
-    // Find which bit positions are constant across all minterms in group
     for (int bit = 0; bit < numVars; bit++) {
         int firstValue = -1;
         bool constant = true;
@@ -335,7 +318,7 @@ std::string ExpressionProcessor::generateImplicantFromGroup(const std::set<int> 
         if (constant) {
             implicant[bit] = (firstValue == 1) ? '1' : '0';
         } else {
-            implicant[bit] = '-';  // Don't care
+            implicant[bit] = '-';
         }
     }
 
@@ -351,15 +334,13 @@ std::string ExpressionProcessor::termToExpression(const std::string &term) {
             expr += "~" + std::string(1, variables[i]) + ".";
         else if (term[i] == '1')
             expr += std::string(1, variables[i]) + ".";
-        // Skip don't care terms (-)
     }
     if (!expr.empty() && expr.back() == '.') {
-        expr = expr.substr(0, expr.size() - 1);  // Remove trailing dot
+        expr = expr.substr(0, expr.size() - 1);
     }
     return expr.empty() ? "1" : expr;
 }
 
-// Generate exact equation from minterms (Sum of Products)
 std::string ExpressionProcessor::generateExactEquation() {
     if (variables.empty() || minterms.empty()) return "0";
 
@@ -381,7 +362,6 @@ std::string ExpressionProcessor::generateExactEquation() {
             }
             first = false;
 
-            // Generate minterm
             std::string minterm;
             for (int j = variables.size() - 1; j >= 0; j--) {
                 bool bit = (i >> j) & 1;
@@ -396,7 +376,6 @@ std::string ExpressionProcessor::generateExactEquation() {
     return result.empty() ? "0" : result;
 }
 
-// K-Map based simplification
 std::string ExpressionProcessor::simplifyExpressionKMap() {
     if (variables.empty() || minterms.empty()) return "0";
 
@@ -408,7 +387,6 @@ std::string ExpressionProcessor::simplifyExpressionKMap() {
     if (all_true) return "1";
     if (all_false) return "0";
 
-    // Use K-Map method to find prime implicants
     std::set<std::string> primeImplicants = findPrimeImplicantsKMap();
 
     if (primeImplicants.empty()) return "0";
@@ -427,7 +405,6 @@ std::string ExpressionProcessor::simplifyExpressionKMap() {
         }
     }
 
-    // Special case for XOR patterns
     if (primeImplicants.size() == 2 && variables.size() == 2) {
         auto it = primeImplicants.begin();
         std::string term1 = *it;
@@ -449,7 +426,6 @@ std::string ExpressionProcessor::simplifyExpressionKMap() {
     return result.empty() ? "0" : result;
 }
 
-// Helper function to setup expression analysis
 bool ExpressionProcessor::setupExpressionAnalysis(const std::string &expr, UIManager &ui, std::vector<std::string> &table) {
     std::string cleanedExpr = cleanExpression(simplifyDoubleNegations(expr));
     if (cleanedExpr.empty()) {
@@ -477,7 +453,6 @@ bool ExpressionProcessor::setupExpressionAnalysis(const std::string &expr, UIMan
     return true;
 }
 
-// Helper function to generate table structure
 void ExpressionProcessor::generateTableStructure(const std::vector<std::string> &headers, int numRows, std::vector<std::string> &table) {
     std::vector<int> colWidths = TableGrid::calculateColumnWidths(headers, numRows);
     table.push_back(TableGrid::generateBorder(colWidths, '+', '+', '+'));
@@ -495,7 +470,6 @@ void ExpressionProcessor::generateExpressionTruthTable(UIManager &ui) {
     int numVars = variables.size();
     minterms.resize(1 << numVars, false);
 
-    // Prepare headers
     std::vector<std::string> headers;
     for (char v : variables) {
         headers.push_back(std::string(1, v));
@@ -507,7 +481,6 @@ void ExpressionProcessor::generateExpressionTruthTable(UIManager &ui) {
     std::vector<int> colWidths = TableGrid::calculateColumnWidths(headers, 1 << numVars);
     std::string cleanedExpr = cleanExpression(simplifyDoubleNegations(expression));
 
-    // Generate truth table rows
     for (int i = 0; i < (1 << numVars); i++) {
         for (int j = 0; j < numVars; j++) {
             varValues[variables[j]] = (i >> (numVars - 1 - j)) & 1;
@@ -528,11 +501,9 @@ void ExpressionProcessor::generateExpressionTruthTable(UIManager &ui) {
 
     table.push_back(TableGrid::generateBorder(colWidths, '+', '+', '+'));
 
-    // Generate exact equation and simplified expression
     std::string exactEquation = generateExactEquation();
     std::string simplifiedExpr = simplifyExpressionKMap();
 
-    // Set exact equation in input field and simplified in expression field
     ui.setInputExpression(exactEquation, 1);
     ui.setCurrentExpression(simplifiedExpr, 1);
     ui.setShowExpression(true, 1);
@@ -618,14 +589,12 @@ void ExpressionProcessor::generateTruthTable(const Circuit &circuit, UIManager &
     int numInputs = connectedInputs.size();
     variables.clear();
 
-    // Create variable names for circuit inputs
     for (size_t i = 0; i < connectedInputs.size(); ++i) {
         variables.push_back('A' + i);
     }
 
     minterms.resize(1 << numInputs, false);
 
-    // Prepare headers
     std::vector<std::string> headers;
     for (size_t i = 0; i < connectedInputs.size(); ++i) {
         headers.push_back(std::string(1, 'A' + i));
@@ -637,7 +606,6 @@ void ExpressionProcessor::generateTruthTable(const Circuit &circuit, UIManager &
     generateTableStructure(headers, 1 << numInputs, table);
     std::vector<int> colWidths = TableGrid::calculateColumnWidths(headers, 1 << numInputs);
 
-    // Generate truth table rows and collect minterms for first output
     for (int i = 0; i < (1 << numInputs); ++i) {
         Circuit tempCircuit = circuit;
         for (int j = 0; j < numInputs; ++j) {
@@ -645,7 +613,6 @@ void ExpressionProcessor::generateTruthTable(const Circuit &circuit, UIManager &
         }
         tempCircuit.evaluateCircuit();
 
-        // Store minterm for first output
         if (!outputs.empty()) {
             minterms[i] = tempCircuit.getGates()[outputs[0]].getState();
         }
@@ -663,7 +630,6 @@ void ExpressionProcessor::generateTruthTable(const Circuit &circuit, UIManager &
 
     table.push_back(TableGrid::generateBorder(colWidths, '+', '+', '+'));
 
-    // Generate equations for first output if available
     if (!outputs.empty() && !variables.empty()) {
         std::string exactEquation = generateExactEquation();
         std::string simplifiedExpr = simplifyExpressionKMap();

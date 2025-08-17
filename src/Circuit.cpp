@@ -1,5 +1,3 @@
-// engine/Circuit.cpp
-
 #include "Circuit.hpp"
 
 #include <algorithm>
@@ -19,8 +17,7 @@ void Circuit::deselectAllGates() {
     }
 }
 void Circuit::addGate(GateType type, sf::Vector2f position) {
-    // Safety check for maximum gates
-    if (gates.size() >= 100) {  // Add reasonable maximum limit
+    if (gates.size() >= 100) {
         return;
     }
 
@@ -47,7 +44,6 @@ void Circuit::addGate(GateType type, sf::Vector2f position) {
             gates.back().setFont(*currentFont);
         }
     } catch (const std::exception& e) {
-        // Handle allocation failure
         if (type == GateType::INPUT) {
             --inputCounter;
             --nextInputLabel;
@@ -78,16 +74,14 @@ void Circuit::drawAllGates(sf::RenderWindow& window) const {
     extern int g_selectedPin;
 
     try {
-        // Validate selected gate index
         selectedGate = (g_selectedGate >= 0 && g_selectedGate < static_cast<int>(gates.size())) ? g_selectedGate : -1;
         selectedPin = (selectedGate != -1 && g_selectedPin >= -1) ? g_selectedPin : -100;
 
         const size_t gateCount = gates.size();
         for (size_t i = 0; i < gateCount; ++i) {
             try {
-                if (i >= gates.size()) break;  // Extra safety check in case gates are removed during iteration
+                if (i >= gates.size()) break;
 
-                // Take a reference to avoid multiple vector accesses
                 const Gate& currentGate = gates[i];
                 if ((int)i == selectedGate) {
                     currentGate.draw(window, i, gates, selectedPin);
@@ -95,12 +89,10 @@ void Circuit::drawAllGates(sf::RenderWindow& window) const {
                     currentGate.draw(window, i, gates, -100);
                 }
             } catch (const std::exception&) {
-                // Skip drawing of problematic gate
                 continue;
             }
         }
     } catch (const std::exception&) {
-        // Handle any SFML or other exceptions
         return;
     }
 }
@@ -141,44 +133,35 @@ void Circuit::removeWiresConnectedToGate(size_t gateIndex) {
 }
 
 void Circuit::updateWirePositions() {
-    // Remove invalid wires first
     wires.erase(std::remove_if(wires.begin(), wires.end(),
                                [this](const Wire& w) { return w.getSrcGate() >= gates.size() || w.getDstGate() >= gates.size(); }),
                 wires.end());
 
-    // Update remaining valid wires
     for (auto& wire : wires) {
         try {
             sf::Vector2f start, end;
             const bool isFeedbackLoop = wire.getDstGate() <= wire.getSrcGate();
 
-            // Get source position
             const Gate& srcGate = gates.at(wire.getSrcGate());
             start = (wire.getSrcPin() == -1) ? srcGate.getOutputPinPosition() : srcGate.getInputPinPosition(wire.getSrcPin());
 
-            // Get destination position
             const Gate& dstGate = gates.at(wire.getDstGate());
             end = (wire.getDstPin() == -1) ? dstGate.getOutputPinPosition() : dstGate.getInputPinPosition(wire.getDstPin());
 
             if (isFeedbackLoop) {
-                // Create a curved path for feedback loops
                 const float vertOffset = 40.0f;
                 const float horizOffset = 30.0f;
 
-                // Calculate control points for the curve
                 sf::Vector2f p1 = start + sf::Vector2f(horizOffset, 0);
                 sf::Vector2f p2 = p1 + sf::Vector2f(0, -vertOffset);
                 sf::Vector2f p3 = end + sf::Vector2f(-horizOffset, -vertOffset);
                 sf::Vector2f p4 = end + sf::Vector2f(-horizOffset, 0);
 
-                // For now we just draw a direct line, but this could be enhanced
-                // to draw a Bezier curve using these control points
                 wire.setPositions(start, end);
             } else {
                 wire.setPositions(start, end);
             }
         } catch (const std::exception&) {
-            // Skip updating this wire's position if there's an error
             continue;
         }
     }
@@ -187,19 +170,17 @@ void Circuit::updateWirePositions() {
 void Circuit::evaluateCircuit() {
     if (gates.empty()) return;
 
-    const int MAX_ITERATIONS = 100;  // Reasonable limit for combinational circuits
+    const int MAX_ITERATIONS = 100;
     const size_t gateCount = gates.size();
 
     std::vector<bool> newStates(gateCount, false);
     std::vector<bool> oldStates(gateCount, false);
     std::vector<bool> gateEvaluated(gateCount, false);
 
-    // Initialize states from current gate values
     for (size_t i = 0; i < gateCount; ++i) {
         oldStates[i] = gates[i].getState();
         newStates[i] = oldStates[i];
 
-        // Mark input gates as already evaluated
         if (gates[i].getType() == GateType::INPUT) {
             gateEvaluated[i] = true;
         }
@@ -208,23 +189,19 @@ void Circuit::evaluateCircuit() {
     bool changed = true;
     int iterations = 0;
 
-    // Fixed-point iteration until convergence or MAX_ITERATIONS
     while (changed && iterations < MAX_ITERATIONS) {
         changed = false;
 
-        // Reset evaluation flags except for inputs
         for (size_t i = 0; i < gateCount; ++i) {
             if (gates[i].getType() != GateType::INPUT) {
                 gateEvaluated[i] = false;
             }
         }
 
-        // Evaluate all non-input gates
         for (size_t i = 0; i < gateCount; ++i) {
             if (gateEvaluated[i]) continue;
 
             if (gates[i].getType() == GateType::OUTPUT) {
-                // For output gates, just pass through the input if it exists
                 std::vector<bool> inputs;
                 for (const auto& w : wires) {
                     if (w.getDstGate() == i && w.getSrcGate() < gateCount && gateEvaluated[w.getSrcGate()]) {
@@ -237,7 +214,6 @@ void Circuit::evaluateCircuit() {
                 continue;
             }
 
-            // For logic gates, collect all inputs from evaluated gates
             std::vector<bool> inputs;
             bool allInputsEvaluated = true;
 
@@ -251,7 +227,6 @@ void Circuit::evaluateCircuit() {
                 }
             }
 
-            // Only evaluate if all inputs are ready
             if (allInputsEvaluated) {
                 newStates[i] = inputs.empty() ? false : gates[i].evaluate(inputs);
                 gateEvaluated[i] = true;
@@ -263,7 +238,6 @@ void Circuit::evaluateCircuit() {
         iterations++;
     }
 
-    // Update all gates at once
     for (size_t i = 0; i < gates.size(); ++i) {
         gates[i].setState(newStates[i]);
     }
@@ -289,7 +263,6 @@ std::vector<size_t> Circuit::getOutputGates() const {
 }
 
 std::string Circuit::generateExpressionForGate(size_t gateIndex, std::map<size_t, std::string>& expressions) const {
-    // Invalid gate or already processed
     if (gateIndex >= gates.size()) return "0";
     if (auto it = expressions.find(gateIndex); it != expressions.end()) {
         return it->second;
@@ -298,49 +271,40 @@ std::string Circuit::generateExpressionForGate(size_t gateIndex, std::map<size_t
     const Gate& gate = gates[gateIndex];
     std::string result;
 
-    // Handle input gates
     if (gate.getType() == GateType::INPUT) {
         result = (gate.getPersistentLabel() >= 0) ? std::string(1, static_cast<char>('A' + gate.getPersistentLabel())) : "0";
         expressions[gateIndex] = result;
         return result;
     }
 
-    // Collect and validate input expressions
     std::vector<std::string> inputExprs;
     std::vector<size_t> inputGates;
 
     for (const Wire& wire : wires) {
         if (wire.getDstGate() != gateIndex || wire.getSrcGate() >= gates.size()) continue;
 
-        // Skip self-referential connections
         if (wire.getSrcGate() == gateIndex) continue;
 
-        // Record input gate for cycle detection
         inputGates.push_back(wire.getSrcGate());
 
-        // Get input expression
         std::string inExpr = generateExpressionForGate(wire.getSrcGate(), expressions);
         if (inExpr != "0") {
             inputExprs.push_back(inExpr);
         }
     }
 
-    // Sort inputs for consistent expression generation
     std::sort(inputExprs.begin(), inputExprs.end());
 
-    // Generate expression based on gate type and inputs
     if (inputExprs.empty()) {
         result = "0";
     } else if (gate.getType() == GateType::OUTPUT) {
         result = inputExprs[0];
     } else {
-        // Validate input count
         bool validInputs = (gate.getType() == GateType::NOT && inputExprs.size() == 1) || (gate.getType() != GateType::NOT && inputExprs.size() == 2);
 
         if (!validInputs) {
             result = "0";
         } else {
-            // Build expression based on gate type
             switch (gate.getType()) {
                 case GateType::AND:
                     result = "(" + inputExprs[0] + "." + inputExprs[1] + ")";
@@ -366,7 +330,6 @@ std::string Circuit::generateExpressionForGate(size_t gateIndex, std::map<size_t
         }
     }
 
-    // Cache and return the result
     expressions[gateIndex] = result;
     return result;
 }
