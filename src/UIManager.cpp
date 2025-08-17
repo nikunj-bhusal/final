@@ -37,7 +37,6 @@ UIManager::UIManager() { setupRightPanelView(); }
 
 void UIManager::setupRightPanelView() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    sf::Vector2f windowSize = {desktop.size.x * 1.f, desktop.size.y * 1.f};
     sf::Vector2f panelSize = {desktop.size.x * 0.25f, desktop.size.y * 1.f};
     rightPanelView.setSize(panelSize);
     rightPanelView.setCenter(panelSize / 2.f);
@@ -50,113 +49,131 @@ void UIManager::setFont(const sf::Font& font) {
     initializeUITexts();
 }
 
+// Helper function to create background with common styling
+std::unique_ptr<sf::RectangleShape> UIManager::createBackground(sf::Vector2f position, sf::Vector2f size, sf::Color fillColor) const {
+    auto bg = std::make_unique<sf::RectangleShape>(size);
+    bg->setPosition(position);
+    bg->setFillColor(fillColor);
+    bg->setOutlineThickness(2.f);
+    bg->setOutlineColor(sf::Color::Black);
+    return bg;
+}
+
+// Helper function to create text with common styling and word wrap
+std::unique_ptr<sf::Text> UIManager::createText(sf::Vector2f position, const std::string& content, unsigned int fontSize) const {
+    if (!currentFont) return nullptr;
+
+    auto text = std::make_unique<sf::Text>(*currentFont);
+    text->setString(content);
+    text->setCharacterSize(fontSize);
+    text->setFillColor(sf::Color::Black);
+    text->setPosition(position);
+    return text;
+}
+
+// Helper function to wrap text within a given width
+std::string UIManager::wrapText(const std::string& text, float maxWidth, unsigned int fontSize) const {
+    if (!currentFont || text.empty()) return text;
+
+    sf::Text tempText(*currentFont);
+    tempText.setCharacterSize(fontSize);
+
+    std::string wrappedText;
+    std::istringstream words(text);
+    std::string word;
+    std::string currentLine;
+
+    while (words >> word) {
+        std::string testLine = currentLine.empty() ? word : currentLine + " " + word;
+        tempText.setString(testLine);
+
+        if (tempText.getLocalBounds().size.x <= maxWidth) {
+            currentLine = testLine;
+        } else {
+            if (!currentLine.empty()) {
+                wrappedText += currentLine + "\n";
+                currentLine = word;
+            } else {
+                // Single word is too long, break it
+                wrappedText += word + "\n";
+                currentLine = "";
+            }
+        }
+    }
+
+    if (!currentLine.empty()) {
+        wrappedText += currentLine;
+    }
+
+    return wrappedText;
+}
+
 void UIManager::setupBackgrounds() const {
     if (!rightPanelBg) {
         sf::Vector2f panelSize = rightPanelView.getSize();
-        rightPanelBg = std::make_unique<sf::RectangleShape>(panelSize);
-        rightPanelBg->setPosition({0.f, 0.f});
-        rightPanelBg->setFillColor(sf::Color(220, 220, 220, 200));
+        rightPanelBg = createBackground({0.f, 0.f}, panelSize, sf::Color(240, 240, 240, 200));
     }
 
-    // Expression 1 backgrounds
+    // Expression 1 backgrounds - Enhanced colors for better distinction
     if (!inputFieldBg1) {
         sf::Vector2f position = GridConfig::getGridPosition(0, 0);
         sf::Vector2f size = GridConfig::getGridAreaSize(1, 4);
-        inputFieldBg1 = std::make_unique<sf::RectangleShape>(size);
-        inputFieldBg1->setPosition(position);
-        inputFieldBg1->setFillColor(sf::Color(220, 220, 220, 200));
-        inputFieldBg1->setOutlineThickness(2.f);
-        inputFieldBg1->setOutlineColor(sf::Color::Black);
+        inputFieldBg1 = createBackground(position, size, sf::Color(255, 240, 240, 220));  // Light pink for exact equation
     }
     if (!expressionBg1) {
         sf::Vector2f position = GridConfig::getGridPosition(1, 0);
         sf::Vector2f size = GridConfig::getGridAreaSize(1, 4);
-        expressionBg1 = std::make_unique<sf::RectangleShape>(size);
-        expressionBg1->setPosition(position);
-        expressionBg1->setFillColor(sf::Color(200, 255, 200));
-        expressionBg1->setOutlineThickness(2.f);
-        expressionBg1->setOutlineColor(sf::Color::Black);
+        expressionBg1 = createBackground(position, size, sf::Color(240, 255, 240, 220));  // Light green for simplified
     }
 
     // Expression 2 backgrounds
     if (!inputFieldBg2) {
         sf::Vector2f position = GridConfig::getGridPosition(2, 0);
         sf::Vector2f size = GridConfig::getGridAreaSize(1, 4);
-        inputFieldBg2 = std::make_unique<sf::RectangleShape>(size);
-        inputFieldBg2->setPosition(position);
-        inputFieldBg2->setFillColor(sf::Color(255, 255, 200));
-        inputFieldBg2->setOutlineThickness(2.f);
-        inputFieldBg2->setOutlineColor(sf::Color::Black);
+        inputFieldBg2 = createBackground(position, size, sf::Color(255, 255, 240, 220));  // Light yellow for exact equation
     }
     if (!expressionBg2) {
         sf::Vector2f position = GridConfig::getGridPosition(3, 0);
         sf::Vector2f size = GridConfig::getGridAreaSize(1, 4);
-        expressionBg2 = std::make_unique<sf::RectangleShape>(size);
-        expressionBg2->setPosition(position);
-        expressionBg2->setFillColor(sf::Color(200, 255, 200));
-        expressionBg2->setOutlineThickness(2.f);
-        expressionBg2->setOutlineColor(sf::Color::Black);
+        expressionBg2 = createBackground(position, size, sf::Color(240, 240, 255, 220));  // Light blue for simplified
     }
 
     // Truth table background
     if (!truthTableBg) {
         sf::Vector2f position = GridConfig::getGridPosition(4, 0);
         sf::Vector2f size = GridConfig::getGridAreaSize(8, 4);
-        truthTableBg = std::make_unique<sf::RectangleShape>(size);
-        truthTableBg->setPosition(position);
-        truthTableBg->setFillColor(sf::Color(200, 200, 255));
-        truthTableBg->setOutlineThickness(2.f);
-        truthTableBg->setOutlineColor(sf::Color::Black);
+        truthTableBg = createBackground(position, size, sf::Color(250, 250, 250, 220));
     }
 }
 
 void UIManager::setupTitles() const {
     if (!currentFont) return;
 
-    // Expression 1 titles
+    // Enhanced titles with better descriptions
     if (!inputTitleText1) {
         sf::Vector2f position = GridConfig::getGridPosition(0, 0);
-        inputTitleText1 = std::make_unique<sf::Text>(*currentFont);
-        inputTitleText1->setString("Input Expression 1");
-        inputTitleText1->setCharacterSize(20);
-        inputTitleText1->setFillColor(sf::Color::Black);
-        inputTitleText1->setPosition({position.x + 10.f, position.y + 5.f});
+        inputTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - Exact Equation (SOP):", 18);
+        inputTitleText1->setStyle(sf::Text::Bold);
     }
     if (!expressionTitleText1) {
         sf::Vector2f position = GridConfig::getGridPosition(1, 0);
-        expressionTitleText1 = std::make_unique<sf::Text>(*currentFont);
-        expressionTitleText1->setString("Expression 1 Output:");
-        expressionTitleText1->setCharacterSize(20);
-        expressionTitleText1->setFillColor(sf::Color::Black);
-        expressionTitleText1->setPosition({position.x + 10.f, position.y + 5.f});
+        expressionTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - K-Map Simplified:", 18);
+        expressionTitleText1->setStyle(sf::Text::Bold);
     }
-
-    // Expression 2 titles
     if (!inputTitleText2) {
         sf::Vector2f position = GridConfig::getGridPosition(2, 0);
-        inputTitleText2 = std::make_unique<sf::Text>(*currentFont);
-        inputTitleText2->setString("Input Expression 2");
-        inputTitleText2->setCharacterSize(20);
-        inputTitleText2->setFillColor(sf::Color::Black);
-        inputTitleText2->setPosition({position.x + 10.f, position.y + 5.f});
+        inputTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - Exact Equation (SOP):", 18);
+        inputTitleText2->setStyle(sf::Text::Bold);
     }
     if (!expressionTitleText2) {
         sf::Vector2f position = GridConfig::getGridPosition(3, 0);
-        expressionTitleText2 = std::make_unique<sf::Text>(*currentFont);
-        expressionTitleText2->setString("Expression 2 Output:");
-        expressionTitleText2->setCharacterSize(20);
-        expressionTitleText2->setFillColor(sf::Color::Black);
-        expressionTitleText2->setPosition({position.x + 10.f, position.y + 5.f});
+        expressionTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - K-Map Simplified:", 18);
+        expressionTitleText2->setStyle(sf::Text::Bold);
     }
-
-    // Truth table title
     if (!truthTableTitleText) {
         sf::Vector2f position = GridConfig::getGridPosition(4, 0);
-        truthTableTitleText = std::make_unique<sf::Text>(*currentFont);
-        truthTableTitleText->setString("Combined Truth Table:");
-        truthTableTitleText->setCharacterSize(20);
-        truthTableTitleText->setFillColor(sf::Color::Black);
-        truthTableTitleText->setPosition({position.x + 10.f, position.y + 5.f});
+        truthTableTitleText = createText({position.x + 10.f, position.y + 5.f}, "Truth Table Analysis:", 20);
+        truthTableTitleText->setStyle(sf::Text::Bold);
     }
 }
 
@@ -165,40 +182,26 @@ void UIManager::initializeUITexts() {
     setupBackgrounds();
     setupTitles();
 
-    // Initialize Expression 1 input field
+    // Initialize text fields with appropriate styling
     if (!inputFieldText1) {
         sf::Vector2f position = GridConfig::getGridPosition(0, 0);
-        inputFieldText1 = std::make_unique<sf::Text>(*currentFont);
-        inputFieldText1->setCharacterSize(20);
-        inputFieldText1->setFillColor(sf::Color::Black);
-        inputFieldText1->setPosition({position.x + 10.f, position.y + 50.f});
+        inputFieldText1 = createText({position.x + 10.f, position.y + 30.f}, "", 16);
+        inputFieldText1->setFillColor(sf::Color(100, 0, 0));  // Dark red for exact equations
     }
-
-    // Initialize Expression 1 output
     if (!expressionText1) {
         sf::Vector2f position = GridConfig::getGridPosition(1, 0);
-        expressionText1 = std::make_unique<sf::Text>(*currentFont);
-        expressionText1->setCharacterSize(20);
-        expressionText1->setFillColor(sf::Color::Black);
-        expressionText1->setPosition({position.x + 10.f, position.y + 50.f});
+        expressionText1 = createText({position.x + 10.f, position.y + 30.f}, "", 16);
+        expressionText1->setFillColor(sf::Color(0, 100, 0));  // Dark green for simplified
     }
-
-    // Initialize Expression 2 input field
     if (!inputFieldText2) {
         sf::Vector2f position = GridConfig::getGridPosition(2, 0);
-        inputFieldText2 = std::make_unique<sf::Text>(*currentFont);
-        inputFieldText2->setCharacterSize(20);
-        inputFieldText2->setFillColor(sf::Color::Black);
-        inputFieldText2->setPosition({position.x + 10.f, position.y + 50.f});
+        inputFieldText2 = createText({position.x + 10.f, position.y + 30.f}, "", 16);
+        inputFieldText2->setFillColor(sf::Color(100, 100, 0));  // Dark yellow for exact equations
     }
-
-    // Initialize Expression 2 output
     if (!expressionText2) {
         sf::Vector2f position = GridConfig::getGridPosition(3, 0);
-        expressionText2 = std::make_unique<sf::Text>(*currentFont);
-        expressionText2->setCharacterSize(20);
-        expressionText2->setFillColor(sf::Color::Black);
-        expressionText2->setPosition({position.x + 10.f, position.y + 50.f});
+        expressionText2 = createText({position.x + 10.f, position.y + 30.f}, "", 16);
+        expressionText2->setFillColor(sf::Color(0, 0, 100));  // Dark blue for simplified
     }
 
     setupUITexts();
@@ -213,143 +216,141 @@ struct TableLayout {
 
 TableLayout computeTableLayout(const std::vector<std::string>& truthTable, const sf::Font& font, float maxWidth, float maxHeight) {
     TableLayout layout;
-    if (truthTable.size() < 3) return layout;  // Need at least header, separator, and one row
+    if (truthTable.size() < 3) return layout;
 
-    // Parse table (assumes format from ExpressionProcessor)
+    // Parse table structure
     std::vector<std::string> headers;
     std::vector<std::vector<std::string>> rows;
     bool isHeader = true;
+
     for (const auto& line : truthTable) {
         if (line.find('+') != std::string::npos) continue;  // Skip borders
+
         std::vector<std::string> cells;
         std::string cell;
-        for (size_t i = 1; i < line.size() - 1; ++i) {  // Skip '│' at start/end
-            if (line[i] == '|') {
-                while (!cell.empty() && cell.back() == ' ') cell.pop_back();
-                while (!cell.empty() && cell.front() == ' ') cell.erase(0, 1);
-                cells.push_back(cell);
-                cell.clear();
-            } else {
-                cell += line[i];
+        bool insideCell = false;
+
+        for (size_t i = 0; i < line.size(); ++i) {
+            char c = line[i];
+            if (c == '|') {
+                if (insideCell) {
+                    // Trim whitespace
+                    while (!cell.empty() && cell.back() == ' ') cell.pop_back();
+                    while (!cell.empty() && cell.front() == ' ') cell.erase(0, 1);
+                    cells.push_back(cell);
+                    cell.clear();
+                }
+                insideCell = !insideCell;
+            } else if (insideCell) {
+                cell += c;
             }
         }
-        if (!cell.empty()) cells.push_back(cell);
-        if (isHeader) {
-            headers = cells;
-            isHeader = false;
-        } else {
-            rows.push_back(cells);
+
+        if (!cells.empty()) {
+            if (isHeader) {
+                headers = cells;
+                isHeader = false;
+            } else {
+                rows.push_back(cells);
+            }
         }
     }
 
-    // Calculate column widths
+    // Calculate optimal column widths
     layout.cells.push_back(headers);
     layout.cells.insert(layout.cells.end(), rows.begin(), rows.end());
     layout.colWidths.resize(headers.size(), 0.f);
+
     sf::Text tempText(font);
-    tempText.setString("");
-    tempText.setCharacterSize(20 - 2);
+    tempText.setCharacterSize(16);
+
     for (size_t col = 0; col < headers.size(); ++col) {
+        float maxColWidth = 0.f;
+
+        // Check header width
         tempText.setString(headers[col]);
-        float width = tempText.getLocalBounds().size.x + 20.f;
+        maxColWidth = std::max(maxColWidth, tempText.getLocalBounds().size.x + 10.f);
+
+        // Check data widths
         for (const auto& row : rows) {
             if (col < row.size()) {
                 tempText.setString(row[col]);
-                width = std::max(width, tempText.getLocalBounds().size.x + 20.f);
+                maxColWidth = std::max(maxColWidth, tempText.getLocalBounds().size.x + 10.f);
             }
         }
-        layout.colWidths[col] = std::min(width, maxWidth / headers.size());  // Cap width
+
+        layout.colWidths[col] = std::min(maxColWidth, maxWidth / headers.size());
     }
 
-    // Calculate row heights
-    tempText.setString("0");
-    float charHeight = tempText.getLocalBounds().size.y + 20.f;
-    layout.rowHeights.resize(rows.size() + 1, charHeight);
+    // Set uniform row height
+    tempText.setString("Ag");  // Test string with ascenders and descenders
+    float rowHeight = tempText.getLocalBounds().size.y + 15.f;
+    layout.rowHeights.resize(layout.cells.size(), rowHeight);
+
+    // Adjust if total width exceeds available space
     float totalWidth = std::accumulate(layout.colWidths.begin(), layout.colWidths.end(), 0.f);
     if (totalWidth > maxWidth) {
         float scale = maxWidth / totalWidth;
-        for (auto& w : layout.colWidths) w *= scale;
+        for (auto& width : layout.colWidths) {
+            width *= scale;
+        }
     }
 
-    // Set start position (below title)
-    layout.startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 40.f};
+    layout.startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 30.f};
     return layout;
+}
+
+// Helper function to update text content with word wrapping
+void UIManager::updateTextContent(std::unique_ptr<sf::Text>& textPtr, const std::string& content, const std::string& defaultContent,
+                                  float maxWidth) const {
+    if (textPtr) {
+        std::string displayText = content.empty() ? defaultContent : content;
+        if (maxWidth > 0) {
+            displayText = wrapText(displayText, maxWidth, textPtr->getCharacterSize());
+        }
+        textPtr->setString(displayText);
+    }
 }
 
 void UIManager::setupUITexts() const {
     if (!currentFont) return;
 
-    // Setup Input Field 1
-    if (!inputFieldText1) {
-        sf::Vector2f position = GridConfig::getGridPosition(0, 0);
-        inputFieldText1 = std::make_unique<sf::Text>(*currentFont);
-        inputFieldText1->setCharacterSize(20);
-        inputFieldText1->setFillColor(sf::Color::Black);
-        inputFieldText1->setPosition({position.x + 10.f, position.y + 50.f});
-    }
-    if (inputFieldText1) {
-        std::string currentInput = getInputExpression(1);
-        std::string displayText = currentInput.empty() ? "Enter expression 1..." : currentInput;
-        inputFieldText1->setString(displayText);
-    }
+    float maxFieldWidth = GridConfig::getGridAreaSize(1, 4).x - 20.f;  // Account for padding
 
-    // Setup Input Field 2
-    if (!inputFieldText2) {
-        sf::Vector2f position = GridConfig::getGridPosition(2, 0);
-        inputFieldText2 = std::make_unique<sf::Text>(*currentFont);
-        inputFieldText2->setCharacterSize(20);
-        inputFieldText2->setFillColor(sf::Color::Black);
-        inputFieldText2->setPosition({position.x + 10.f, position.y + 50.f});
-    }
-    if (inputFieldText2) {
-        std::string currentInput = getInputExpression(2);
-        std::string displayText = currentInput.empty() ? "Enter expression 2..." : currentInput;
-        inputFieldText2->setString(displayText);
-    }
+    // Update text content with word wrapping for better display
+    updateTextContent(inputFieldText1, getInputExpression(1), "No exact equation generated", maxFieldWidth);
+    updateTextContent(inputFieldText2, getInputExpression(2), "No exact equation generated", maxFieldWidth);
+    updateTextContent(expressionText1, currentExpression1, "No simplified expression generated", maxFieldWidth);
+    updateTextContent(expressionText2, currentExpression2, "No simplified expression generated", maxFieldWidth);
 
-    // Setup Expression Output 1
-    if (!expressionText1) {
-        sf::Vector2f position = GridConfig::getGridPosition(1, 0);
-        expressionText1 = std::make_unique<sf::Text>(*currentFont);
-        expressionText1->setCharacterSize(20);
-        expressionText1->setFillColor(sf::Color::Black);
-        expressionText1->setPosition({position.x + 10.f, position.y + 50.f});
-    }
-    if (expressionText1) {
-        std::string display = currentExpression1.empty() ? "No expression 1 generated yet" : currentExpression1;
-        expressionText1->setString(display);
-    }
-
-    // Setup Expression Output 2
-    if (!expressionText2) {
-        sf::Vector2f position = GridConfig::getGridPosition(3, 0);
-        expressionText2 = std::make_unique<sf::Text>(*currentFont);
-        expressionText2->setCharacterSize(20);
-        expressionText2->setFillColor(sf::Color::Black);
-        expressionText2->setPosition({position.x + 10.f, position.y + 50.f});
-    }
-    if (expressionText2) {
-        std::string display = currentExpression2.empty() ? "No expression 2 generated yet" : currentExpression2;
-        expressionText2->setString(display);
-    }
-
-    // Setup Truth Table
+    // Setup Truth Table with improved formatting
     truthTableTexts.clear();
     if (!truthTable.empty()) {
-        sf::Vector2f tableSize = GridConfig::getGridAreaSize(8, 4) - sf::Vector2f{20.f, 50.f};  // Account for margins and title
+        sf::Vector2f tableSize = GridConfig::getGridAreaSize(8, 4) - sf::Vector2f{20.f, 40.f};
         TableLayout layout = computeTableLayout(truthTable, *currentFont, tableSize.x, tableSize.y);
+
         float y = layout.startPos.y;
         for (size_t row = 0; row < layout.cells.size(); ++row) {
             float x = layout.startPos.x;
             for (size_t col = 0; col < layout.cells[row].size(); ++col) {
                 sf::Text text(*currentFont);
                 text.setString(layout.cells[row][col]);
-                text.setCharacterSize(20 - 2);
-                text.setFillColor(sf::Color::Black);
+                text.setCharacterSize(16);
+
+                // Different styling for header vs data
+                if (row == 0) {
+                    text.setFillColor(sf::Color(0, 0, 150));  // Blue for headers
+                    text.setStyle(sf::Text::Bold);
+                } else {
+                    text.setFillColor(sf::Color::Black);
+                }
+
+                // Center text in cell
                 sf::FloatRect bounds = text.getLocalBounds();
                 float cellX = x + (layout.colWidths[col] - bounds.size.x) / 2.f;
-                float cellY = y + (layout.rowHeights[row] - bounds.size.y) / 2.f - bounds.position.y;
+                float cellY = y + (layout.rowHeights[row] - bounds.size.y) / 2.f;
                 text.setPosition({cellX, cellY});
+
                 truthTableTexts.push_back(text);
                 x += layout.colWidths[col];
             }
@@ -358,10 +359,18 @@ void UIManager::setupUITexts() const {
     }
 }
 
+// Helper function to draw UI elements with null checking
+void UIManager::drawUIElements(sf::RenderWindow& window, const std::vector<sf::Drawable*>& elements) const {
+    for (const auto* element : elements) {
+        if (element) {
+            window.draw(*element);
+        }
+    }
+}
+
 void UIManager::drawUI(sf::RenderWindow& window) const {
     if (!currentFont) return;
 
-    // Set the right panel view
     window.setView(rightPanelView);
 
     // Setup all UI elements
@@ -370,25 +379,14 @@ void UIManager::drawUI(sf::RenderWindow& window) const {
     setupUITexts();
 
     // Draw backgrounds
-    if (rightPanelBg) window.draw(*rightPanelBg);
-
-    // Expression 1 backgrounds
-    if (inputFieldBg1) window.draw(*inputFieldBg1);
-    if (expressionBg1) window.draw(*expressionBg1);
-
-    // Expression 2 backgrounds
-    if (inputFieldBg2) window.draw(*inputFieldBg2);
-    if (expressionBg2) window.draw(*expressionBg2);
-
-    // Truth table background
-    if (truthTableBg) window.draw(*truthTableBg);
+    std::vector<sf::Drawable*> backgrounds = {rightPanelBg.get(),  inputFieldBg1.get(), expressionBg1.get(),
+                                              inputFieldBg2.get(), expressionBg2.get(), truthTableBg.get()};
+    drawUIElements(window, backgrounds);
 
     // Draw titles
-    if (inputTitleText1) window.draw(*inputTitleText1);
-    if (expressionTitleText1) window.draw(*expressionTitleText1);
-    if (inputTitleText2) window.draw(*inputTitleText2);
-    if (expressionTitleText2) window.draw(*expressionTitleText2);
-    if (truthTableTitleText) window.draw(*truthTableTitleText);
+    std::vector<sf::Drawable*> titles = {inputTitleText1.get(), expressionTitleText1.get(), inputTitleText2.get(), expressionTitleText2.get(),
+                                         truthTableTitleText.get()};
+    drawUIElements(window, titles);
 
     // Draw content
     if (inputFieldText1) window.draw(*inputFieldText1);
@@ -410,14 +408,12 @@ void UIManager::toggleInputField(int expressionNumber) {
         showInputField2 = !showInputField2;
         if (showInputField2) {
             inputExpression2.clear();
-            // Turn off the other input field
             showInputField1 = false;
         }
     } else {
         showInputField1 = !showInputField1;
         if (showInputField1) {
             inputExpression1.clear();
-            // Turn off the other input field
             showInputField2 = false;
         }
     }
