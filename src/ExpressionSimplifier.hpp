@@ -35,10 +35,11 @@ class ExpressionSimplifier {
     // Helper methods
     std::vector<std::vector<int>> generateTruthTable(const std::string& expression, int numVars) const;
     std::vector<int> extractMinterms(const std::vector<std::vector<int>>& truthTable) const;
-    std::string quineMcCluskey(const std::vector<int>& minterms, int numVars) const;
+    std::string quineMcCluskey(const std::vector<int>& minterms, int numVars, const std::string& expression) const;
     std::vector<std::vector<Implicant>> groupByOnes(const std::vector<int>& minterms, int numVars) const;
     std::vector<Implicant> findPrimeImplicants(const std::vector<int>& minterms, int numVars) const;
-    std::string generateSimplifiedExpression(const std::vector<Implicant>& primeImplicants, const std::vector<int>& minterms, int numVars) const;
+    std::string generateSimplifiedExpression(const std::vector<Implicant>& primeImplicants, const std::vector<int>& minterms, int numVars,
+                                             const std::string& expression) const;
     bool canCombine(const std::string& pattern1, const std::string& pattern2) const;
     std::string combinePatterns(const std::string& pattern1, const std::string& pattern2) const;
     int countOnes(const std::string& binary) const;

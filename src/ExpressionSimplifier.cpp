@@ -33,7 +33,7 @@ std::string ExpressionSimplifier::simplifyExpression(const std::string& expressi
     }
 
     // Apply Quine-McCluskey algorithm
-    return quineMcCluskey(minterms, numVars);
+    return quineMcCluskey(minterms, numVars, standardForm);
 }
 
 std::vector<std::string> ExpressionSimplifier::generateTruthTableDisplay(const std::string& expression) const {
@@ -207,7 +207,7 @@ std::vector<int> ExpressionSimplifier::extractMinterms(const std::vector<std::ve
     return minterms;
 }
 
-std::string ExpressionSimplifier::quineMcCluskey(const std::vector<int>& minterms, int numVars) const {
+std::string ExpressionSimplifier::quineMcCluskey(const std::vector<int>& minterms, int numVars, const std::string& expression) const {
     if (minterms.empty()) {
         return "0";
     }
@@ -215,8 +215,8 @@ std::string ExpressionSimplifier::quineMcCluskey(const std::vector<int>& minterm
     // Find prime implicants
     std::vector<Implicant> primeImplicants = findPrimeImplicants(minterms, numVars);
 
-    // Generate simplified expression
-    return generateSimplifiedExpression(primeImplicants, minterms, numVars);
+    // Generate simplified expression with actual variables from the expression
+    return generateSimplifiedExpression(primeImplicants, minterms, numVars, expression);
 }
 
 std::vector<std::vector<ExpressionSimplifier::Implicant>> ExpressionSimplifier::groupByOnes(const std::vector<int>& minterms, int numVars) const {
@@ -282,12 +282,13 @@ std::vector<ExpressionSimplifier::Implicant> ExpressionSimplifier::findPrimeImpl
 }
 
 std::string ExpressionSimplifier::generateSimplifiedExpression(const std::vector<Implicant>& primeImplicants, const std::vector<int>& minterms,
-                                                               int numVars) const {
+                                                               int numVars, const std::string& expression) const {
     if (primeImplicants.empty()) {
         return "0";
     }
 
-    std::set<char> variables = getVariables("ABCDEFGH");
+    // Get variables from the actual expression instead of hardcoded string
+    std::set<char> variables = getVariables(expression);
     std::vector<char> varList(variables.begin(), variables.end());
     std::sort(varList.begin(), varList.end());
 

@@ -80,13 +80,7 @@ void ComponentPalette::setupTexts() {
                             TOP_MARGIN + (BOX_HEIGHT - tBounds.size.y) / 2.f - tBounds.position.y});
 
     float instrStartY = BOX_Y_START + type.size() * BOX_Y_SPACING + SPACING;
-    std::vector<std::string> instructions = {"CONTROLS:",
-                                             "O             Output (Circuit)",
-                                             "I                Input Expression",
-                                             "Enter     Output (Expression)",
-                                             "C             Clear",
-                                             "Esc         Cancel Selection",
-                                             "Del         Delete",
+    std::vector<std::string> instructions = {"CONTROLS:", "C             Clear", "Esc         Cancel Selection", "Del         Delete",
                                              "Q            Quit"};
 
     for (size_t i = 0; i < instructions.size(); ++i) {

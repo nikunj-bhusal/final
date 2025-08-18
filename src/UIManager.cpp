@@ -150,22 +150,22 @@ void UIManager::setupTitles() const {
 
     if (!inputTitleText1) {
         sf::Vector2f position = GridConfig::getGridPosition(0, 0);
-        inputTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - Exact Equation (SOP):", 18);
+        inputTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - Exact:", 18);
         inputTitleText1->setStyle(sf::Text::Bold);
     }
     if (!expressionTitleText1) {
         sf::Vector2f position = GridConfig::getGridPosition(1, 0);
-        expressionTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - K-Map Simplified:", 18);
+        expressionTitleText1 = createText({position.x + 10.f, position.y + 5.f}, "Expression 1 - Simplified:", 18);
         expressionTitleText1->setStyle(sf::Text::Bold);
     }
     if (!inputTitleText2) {
         sf::Vector2f position = GridConfig::getGridPosition(2, 0);
-        inputTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - Exact Equation (SOP):", 18);
+        inputTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - Exact:", 18);
         inputTitleText2->setStyle(sf::Text::Bold);
     }
     if (!expressionTitleText2) {
         sf::Vector2f position = GridConfig::getGridPosition(3, 0);
-        expressionTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - K-Map Simplified:", 18);
+        expressionTitleText2 = createText({position.x + 10.f, position.y + 5.f}, "Expression 2 - Simplified:", 18);
         expressionTitleText2->setStyle(sf::Text::Bold);
     }
     if (!truthTableTitleText) {
