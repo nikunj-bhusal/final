@@ -139,7 +139,10 @@ void Simulator::drawUI(sf::RenderWindow &window) const { ui.drawUI(window); }
 
 void Simulator::generateTruthTable() { ui.updateFromCircuit(circuit); }
 
-void Simulator::generateLogicalExpression() { UIManager ui.updateFromCircuit(circuit); }
+void Simulator::generateLogicalExpression() {
+    UIManager ui;
+    ui.updateFromCircuit(circuit);
+}
 
 void Simulator::clearCircuit() {
     circuit.clearCircuit();
