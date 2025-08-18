@@ -11,28 +11,21 @@ A digital logic circuit simulator built with SFML-3.0.0 for creating and analyzi
 - **Nikunj Bhusal** (081BCT043)
 - **Nirdesh Joshi** (081BCT044)
 
-## Repository
-
-```
-https://github.com/nabaraj-bhandari/final.git
-```
 
 ## How to Run
 
-### Windows
+### Windows \ Linux
+
+```bash
+git clone https://github.com/nabaraj-bhandari/digitalLogicSimulator.git
+```
+
+```bash
+cd digitalLogicSimulator
+```
 
 ```bash
 make run
-```
-
-### Linux
-
-```bash
-make
-```
-
-```bash
-./program
 ```
 
 ## Features
