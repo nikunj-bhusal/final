@@ -34,6 +34,8 @@ class Circuit {
     std::vector<size_t> getOutputGates() const;
     std::string generateExpressionForGate(size_t gateIndex, std::map<size_t, std::string>& expressions) const;
     std::string getGateSymbol(GateType type) const;
+    std::string getExactEquation() const;                    // New method to get exact equation from circuit
+    std::vector<std::string> getAllOutputEquations() const;  // New method to get all output equations
     const std::vector<Gate>& getGates() const { return gates; }
     std::vector<Gate>& getGates() { return gates; }
     const std::vector<Wire>& getWires() const { return wires; }

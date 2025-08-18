@@ -2,7 +2,6 @@
 #include <SFML/Graphics.hpp>
 
 #include "Circuit.hpp"
-#include "ExpressionProcessor.hpp"
 #include "Selection.hpp"
 #include "UIManager.hpp"
 
@@ -11,7 +10,6 @@ class Simulator {
     Circuit circuit;
     Selection selection;
     UIManager ui;
-    ExpressionProcessor exprProc;
 
    public:
     Simulator();

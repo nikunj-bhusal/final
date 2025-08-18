@@ -1,6 +1,10 @@
 #include "UIManager.hpp"
 
+#include <algorithm>
 #include <numeric>
+
+#include "Circuit.hpp"
+#include "ExpressionSimplifier.hpp"
 
 class GridConfig {
    public:
@@ -32,7 +36,10 @@ class GridConfig {
     }
 };
 
-UIManager::UIManager() { setupRightPanelView(); }
+UIManager::UIManager() {
+    setupRightPanelView();
+    expressionSimplifier = std::make_unique<ExpressionSimplifier>();
+}
 
 void UIManager::setupRightPanelView() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -197,92 +204,6 @@ void UIManager::initializeUITexts() {
     setupUITexts();
 }
 
-struct TableLayout {
-    std::vector<float> colWidths;
-    std::vector<float> rowHeights;
-    std::vector<std::vector<std::string>> cells;
-    sf::Vector2f startPos;
-};
-
-TableLayout computeTableLayout(const std::vector<std::string>& truthTable, const sf::Font& font, float maxWidth, float maxHeight) {
-    TableLayout layout;
-    if (truthTable.size() < 3) return layout;
-
-    std::vector<std::string> headers;
-    std::vector<std::vector<std::string>> rows;
-    bool isHeader = true;
-
-    for (const auto& line : truthTable) {
-        if (line.find('+') != std::string::npos) continue;
-
-        std::vector<std::string> cells;
-        std::string cell;
-        bool insideCell = false;
-
-        for (size_t i = 0; i < line.size(); ++i) {
-            char c = line[i];
-            if (c == '|') {
-                if (insideCell) {
-                    while (!cell.empty() && cell.back() == ' ') cell.pop_back();
-                    while (!cell.empty() && cell.front() == ' ') cell.erase(0, 1);
-                    cells.push_back(cell);
-                    cell.clear();
-                }
-                insideCell = !insideCell;
-            } else if (insideCell) {
-                cell += c;
-            }
-        }
-
-        if (!cells.empty()) {
-            if (isHeader) {
-                headers = cells;
-                isHeader = false;
-            } else {
-                rows.push_back(cells);
-            }
-        }
-    }
-
-    layout.cells.push_back(headers);
-    layout.cells.insert(layout.cells.end(), rows.begin(), rows.end());
-    layout.colWidths.resize(headers.size(), 0.f);
-
-    sf::Text tempText(font);
-    tempText.setCharacterSize(16);
-
-    for (size_t col = 0; col < headers.size(); ++col) {
-        float maxColWidth = 0.f;
-
-        tempText.setString(headers[col]);
-        maxColWidth = std::max(maxColWidth, tempText.getLocalBounds().size.x + 10.f);
-
-        for (const auto& row : rows) {
-            if (col < row.size()) {
-                tempText.setString(row[col]);
-                maxColWidth = std::max(maxColWidth, tempText.getLocalBounds().size.x + 10.f);
-            }
-        }
-
-        layout.colWidths[col] = std::min(maxColWidth, maxWidth / headers.size());
-    }
-
-    tempText.setString("Ag");
-    float rowHeight = tempText.getLocalBounds().size.y + 15.f;
-    layout.rowHeights.resize(layout.cells.size(), rowHeight);
-
-    float totalWidth = std::accumulate(layout.colWidths.begin(), layout.colWidths.end(), 0.f);
-    if (totalWidth > maxWidth) {
-        float scale = maxWidth / totalWidth;
-        for (auto& width : layout.colWidths) {
-            width *= scale;
-        }
-    }
-
-    layout.startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 30.f};
-    return layout;
-}
-
 void UIManager::updateTextContent(std::unique_ptr<sf::Text>& textPtr, const std::string& content, const std::string& defaultContent,
                                   float maxWidth) const {
     if (textPtr) {
@@ -304,35 +225,107 @@ void UIManager::setupUITexts() const {
     updateTextContent(expressionText1, currentExpression1, "No simplified expression generated", maxFieldWidth);
     updateTextContent(expressionText2, currentExpression2, "No simplified expression generated", maxFieldWidth);
 
+    // Generate new clean truth table
+    generateTruthTable();
+}
+
+void UIManager::generateTruthTable() const {
     truthTableTexts.clear();
-    if (!truthTable.empty()) {
-        sf::Vector2f tableSize = GridConfig::getGridAreaSize(8, 4) - sf::Vector2f{20.f, 40.f};
-        TableLayout layout = computeTableLayout(truthTable, *currentFont, tableSize.x, tableSize.y);
 
-        float y = layout.startPos.y;
-        for (size_t row = 0; row < layout.cells.size(); ++row) {
-            float x = layout.startPos.x;
-            for (size_t col = 0; col < layout.cells[row].size(); ++col) {
-                sf::Text text(*currentFont);
-                text.setString(layout.cells[row][col]);
-                text.setCharacterSize(16);
+    if (!currentFont || !expressionSimplifier) return;
 
-                if (row == 0) {
-                    text.setFillColor(sf::Color(0, 0, 150));
-                    text.setStyle(sf::Text::Bold);
-                } else {
-                    text.setFillColor(sf::Color::Black);
-                }
+    // Collect valid expressions
+    std::vector<std::string> validExpressions;
+    if (!getInputExpression(1).empty() && getInputExpression(1) != "0") {
+        validExpressions.push_back(getInputExpression(1));
+    }
+    if (!getInputExpression(2).empty() && getInputExpression(2) != "0") {
+        validExpressions.push_back(getInputExpression(2));
+    }
 
-                sf::FloatRect bounds = text.getLocalBounds();
-                float cellX = x + (layout.colWidths[col] - bounds.size.x) / 2.f;
-                float cellY = y + (layout.rowHeights[row] - bounds.size.y) / 2.f;
-                text.setPosition({cellX, cellY});
+    if (validExpressions.empty()) return;
 
-                truthTableTexts.push_back(text);
-                x += layout.colWidths[col];
-            }
-            y += layout.rowHeights[row];
+    // Get all variables from expressions
+    std::set<char> allVariables;
+    for (const std::string& expr : validExpressions) {
+        std::set<char> exprVars = expressionSimplifier->getVariables(expr);
+        allVariables.insert(exprVars.begin(), exprVars.end());
+    }
+
+    std::vector<char> varList(allVariables.begin(), allVariables.end());
+    std::sort(varList.begin(), varList.end());
+
+    if (varList.empty()) return;
+
+    int numVars = static_cast<int>(varList.size());
+    int numRows = 1 << numVars;
+
+    // Calculate table layout
+    sf::Vector2f startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 30.f};
+    float cellWidth = 40.f;
+    float cellHeight = 25.f;
+
+    // Create header row
+    float x = startPos.x;
+    float y = startPos.y;
+
+    // Variable headers
+    for (char var : varList) {
+        sf::Text text(*currentFont);
+        text.setString(std::string(1, var));
+        text.setCharacterSize(16);
+        text.setFillColor(sf::Color(0, 0, 150));
+        text.setStyle(sf::Text::Bold);
+        text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
+        truthTableTexts.push_back(text);
+        x += cellWidth;
+    }
+
+    // Output headers
+    for (size_t i = 0; i < validExpressions.size(); i++) {
+        sf::Text text(*currentFont);
+        text.setString("Y" + std::to_string(i + 1));
+        text.setCharacterSize(16);
+        text.setFillColor(sf::Color(0, 0, 150));
+        text.setStyle(sf::Text::Bold);
+        text.setPosition(sf::Vector2f(x + cellWidth / 2 - 8.f, y));
+        truthTableTexts.push_back(text);
+        x += cellWidth;
+    }
+
+    // Generate data rows
+    for (int row = 0; row < numRows; row++) {
+        x = startPos.x;
+        y = startPos.y + cellHeight * (row + 1);
+
+        std::map<char, bool> values;
+
+        // Variable values
+        for (int col = 0; col < numVars; col++) {
+            char var = varList[col];
+            bool value = (row >> (numVars - 1 - col)) & 1;
+            values[var] = value;
+
+            sf::Text text(*currentFont);
+            text.setString(value ? "1" : "0");
+            text.setCharacterSize(16);
+            text.setFillColor(sf::Color::Black);
+            text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
+            truthTableTexts.push_back(text);
+            x += cellWidth;
+        }
+
+        // Output values
+        for (const std::string& expr : validExpressions) {
+            bool output = expressionSimplifier->evaluateExpression(expr, values);
+
+            sf::Text text(*currentFont);
+            text.setString(output ? "1" : "0");
+            text.setCharacterSize(16);
+            text.setFillColor(sf::Color::Black);
+            text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
+            truthTableTexts.push_back(text);
+            x += cellWidth;
         }
     }
 }
@@ -389,4 +382,88 @@ void UIManager::toggleInputField(int expressionNumber) {
             showInputField2 = false;
         }
     }
+}
+
+void UIManager::updateFromCircuit(const Circuit& circuit) {
+    // Get all output equations from the circuit
+    std::vector<std::string> outputEquations = circuit.getAllOutputEquations();
+
+    if (!outputEquations.empty()) {
+        // Process multiple outputs if available
+        processMultipleOutputs(outputEquations);
+    } else {
+        // Clear expressions if no valid circuit
+        setInputExpression("", 1);
+        setInputExpression("", 2);
+        setCurrentExpression("", 1);
+        setCurrentExpression("", 2);
+        setShowExpression(false, 1);
+        setShowExpression(false, 2);
+        setShowTruthTable(false);
+    }
+}
+
+void UIManager::processMultipleOutputs(const std::vector<std::string>& outputEquations) {
+    if (!expressionSimplifier || outputEquations.empty()) {
+        // Clear all expressions if no valid input
+        setInputExpression("", 1);
+        setInputExpression("", 2);
+        setCurrentExpression("", 1);
+        setCurrentExpression("", 2);
+        setShowExpression(false, 1);
+        setShowExpression(false, 2);
+        setShowInputField(false, 1);
+        setShowInputField(false, 2);
+        setShowTruthTable(false);
+        setupUITexts();
+        return;
+    }
+
+    std::vector<std::string> validEquations;
+
+    // Process first output (Expression 1)
+    if (outputEquations.size() >= 1 && !outputEquations[0].empty() && outputEquations[0] != "0") {
+        setInputExpression(outputEquations[0], 1);
+        setShowInputField(true, 1);
+
+        std::string simplifiedExpression1 = expressionSimplifier->simplifyExpression(outputEquations[0]);
+        setCurrentExpression(simplifiedExpression1, 1);
+        setShowExpression(true, 1);
+
+        validEquations.push_back(outputEquations[0]);
+    } else {
+        // Clear first expression if empty
+        setInputExpression("", 1);
+        setCurrentExpression("", 1);
+        setShowExpression(false, 1);
+        setShowInputField(false, 1);
+    }
+
+    // Process second output (Expression 2) if it exists
+    if (outputEquations.size() >= 2 && !outputEquations[1].empty() && outputEquations[1] != "0") {
+        setInputExpression(outputEquations[1], 2);
+        setShowInputField(true, 2);
+
+        std::string simplifiedExpression2 = expressionSimplifier->simplifyExpression(outputEquations[1]);
+        setCurrentExpression(simplifiedExpression2, 2);
+        setShowExpression(true, 2);
+
+        validEquations.push_back(outputEquations[1]);
+    } else {
+        // Clear second expression if not available
+        setInputExpression("", 2);
+        setCurrentExpression("", 2);
+        setShowExpression(false, 2);
+        setShowInputField(false, 2);
+    }
+
+    // Generate unified truth table for all valid expressions
+    if (!validEquations.empty()) {
+        setShowTruthTable(true);
+    } else {
+        setShowTruthTable(false);
+    }
+
+    // Refresh UI texts to show the new data
+    setupUITexts();
 }

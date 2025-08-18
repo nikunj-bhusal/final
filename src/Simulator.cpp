@@ -104,11 +104,9 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
                     inp.pop_back();
                 } else if (c == '\r') {
                     if (!inp.empty()) {
-                        exprProc.setExpression(inp);
-                        exprProc.generateExpressionTruthTable(ui);
-                        ui.setCurrentExpression(exprProc.simplifyExpression(), activeField);
-                        ui.setShowExpression(true, activeField);
-                        ui.initializeUITexts();
+                        // Process the entered expression using the UI's expression simplifier
+                        std::vector<std::string> singleExpression = {inp};
+                        ui.processMultipleOutputs(singleExpression);
                     }
                 } else if ((std::isalpha(c) && std::tolower(c) != 'o') || c == '.' || c == '+' || c == '~' || c == '^' || c == '(' || c == ')') {
                     inp += c;
@@ -123,6 +121,9 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
 void Simulator::update() {
     circuit.updateWirePositions();
     circuit.evaluateCircuit();
+
+    // Automatically update UI with current circuit expression
+    ui.updateFromCircuit(circuit);
 }
 
 void Simulator::draw(sf::RenderWindow &window) const {
@@ -138,38 +139,14 @@ void Simulator::draw(sf::RenderWindow &window) const {
 
 void Simulator::drawUI(sf::RenderWindow &window) const { ui.drawUI(window); }
 
-void Simulator::generateTruthTable() { exprProc.generateTruthTable(circuit, ui); }
+void Simulator::generateTruthTable() {
+    // Generate truth table using the circuit and display via UI
+    ui.updateFromCircuit(circuit);
+}
 
 void Simulator::generateLogicalExpression() {
-    std::vector<size_t> outputs = circuit.getOutputGates();
-    const auto &gates = circuit.getGates();
-    if (gates.empty() || outputs.empty()) {
-        ui.setCurrentExpression("", 1);
-        ui.setCurrentExpression("", 2);
-        ui.setInputExpression("", 1);
-        ui.setInputExpression("", 2);
-        ui.setShowExpression(false, 1);
-        ui.setShowExpression(false, 2);
-        ui.initializeUITexts();
-        return;
-    }
-    std::map<size_t, std::string> expressions;
-    for (size_t i = 0; i < outputs.size() && i < 2; ++i) {
-        size_t outIdx = outputs[i];
-        std::string expr = circuit.generateExpressionForGate(outIdx, expressions);
-        if (i == 0) {
-            exprProc.setExpression(expr);
-            ui.setInputExpression(expr, 1);
-            ui.setCurrentExpression(expr, 1);
-            ui.setShowExpression(true, 1);
-        } else if (i == 1) {
-            ui.setInputExpression(expr, 2);
-            ui.setCurrentExpression(expr, 2);
-            ui.setShowExpression(true, 2);
-        }
-    }
-    ui.setShowExpression(true);
-    ui.initializeUITexts();
+    // New flow: Circuit.cpp provides exact equation, passes to ExpressionSimplifier, displays from UIManager
+    ui.updateFromCircuit(circuit);
 }
 
 void Simulator::clearCircuit() {
@@ -188,4 +165,7 @@ void Simulator::setFont(const sf::Font &font) {
 
 void Simulator::toggleInputField(int expressionNumber) { ui.toggleInputField(expressionNumber); }
 
-void Simulator::generateExpressionTruthTable() { exprProc.generateExpressionTruthTable(ui); }
+void Simulator::generateExpressionTruthTable() {
+    // Generate expression truth table using current circuit
+    ui.updateFromCircuit(circuit);
+}

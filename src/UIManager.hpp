@@ -5,6 +5,11 @@
 #include <string>
 #include <vector>
 
+#include "ExpressionSimplifier.hpp"
+
+// Forward declarations
+class Circuit;
+
 class UIManager {
    private:
     const sf::Font* currentFont = nullptr;
@@ -15,6 +20,9 @@ class UIManager {
     std::string inputExpression1;
     std::string inputExpression2;
     int activeExpressionField = 1;
+
+    // ExpressionSimplifier for processing expressions
+    std::unique_ptr<ExpressionSimplifier> expressionSimplifier;
 
     bool showTruthTable = false;
     bool showExpression1 = false;
@@ -53,6 +61,7 @@ class UIManager {
     void updateTextContent(std::unique_ptr<sf::Text>& textPtr, const std::string& content, const std::string& defaultContent,
                            float maxWidth = 0.f) const;
     void drawUIElements(sf::RenderWindow& window, const std::vector<sf::Drawable*>& elements) const;
+    void generateTruthTable() const;
 
    public:
     UIManager();
@@ -98,4 +107,8 @@ class UIManager {
 
     const std::vector<std::string>& getTruthTable() const { return truthTable; }
     void setTruthTable(const std::vector<std::string>& table) { truthTable = table; }
+
+    // New methods for circuit integration
+    void updateFromCircuit(const Circuit& circuit);
+    void processMultipleOutputs(const std::vector<std::string>& outputEquations);
 };

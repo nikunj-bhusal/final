@@ -352,3 +352,65 @@ std::string Circuit::getGateSymbol(GateType type) const {
             return "";
     }
 }
+
+std::string Circuit::getExactEquation() const {
+    if (gates.empty()) {
+        return "";
+    }
+
+    // Find all output gates
+    std::vector<size_t> outputGates = getOutputGates();
+    if (outputGates.empty()) {
+        return "";
+    }
+
+    // Generate expressions for all outputs
+    std::vector<std::string> outputExpressions;
+    for (size_t outputIndex : outputGates) {
+        std::map<size_t, std::string> expressions;
+        std::string expr = generateExpressionForGate(outputIndex, expressions);
+        if (!expr.empty() && expr != "0") {
+            outputExpressions.push_back(expr);
+        }
+    }
+
+    if (outputExpressions.empty()) {
+        return "0";
+    }
+
+    // If multiple outputs, combine them (though typically there's one main output)
+    if (outputExpressions.size() == 1) {
+        return outputExpressions[0];
+    }
+
+    // For multiple outputs, we could return the first one or combine them
+    // For now, let's return the first output's expression
+    return outputExpressions[0];
+}
+
+std::vector<std::string> Circuit::getAllOutputEquations() const {
+    std::vector<std::string> outputExpressions;
+
+    if (gates.empty()) {
+        return outputExpressions;
+    }
+
+    // Find all output gates
+    std::vector<size_t> outputGates = getOutputGates();
+    if (outputGates.empty()) {
+        return outputExpressions;
+    }
+
+    // Generate expressions for all outputs
+    for (size_t outputIndex : outputGates) {
+        std::map<size_t, std::string> expressions;
+        std::string expr = generateExpressionForGate(outputIndex, expressions);
+        if (!expr.empty() && expr != "0") {
+            outputExpressions.push_back(expr);
+        } else {
+            outputExpressions.push_back("0");  // Add placeholder for empty expressions
+        }
+    }
+
+    return outputExpressions;
+}

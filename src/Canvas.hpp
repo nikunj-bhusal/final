@@ -13,7 +13,7 @@ class Canvas {
     void drawGrid(sf::RenderWindow &window);
 
    public:
-    explicit Canvas(Simulator &simulator);
+    Canvas(Simulator &simulator);
     void handleEvent(const sf::Event &event, const sf::RenderWindow &window);
     void draw(sf::RenderWindow &window);
     const sf::View &getView() const { return view; }
