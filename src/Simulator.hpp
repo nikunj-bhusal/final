@@ -23,6 +23,5 @@ class Simulator {
     void deleteSelectedGates();
     void cancelSelection();
     void setFont(const sf::Font &font);
-    void toggleInputField(int expressionNumber = 1);
     void generateExpressionTruthTable();
 };

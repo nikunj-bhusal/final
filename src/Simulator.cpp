@@ -163,8 +163,6 @@ void Simulator::setFont(const sf::Font &font) {
     circuit.setFont(font);
 }
 
-void Simulator::toggleInputField(int expressionNumber) { ui.toggleInputField(expressionNumber); }
-
 void Simulator::generateExpressionTruthTable() {
     // Generate expression truth table using current circuit
     ui.updateFromCircuit(circuit);

@@ -261,7 +261,7 @@ void UIManager::generateTruthTable() const {
     int numRows = 1 << numVars;
 
     // Calculate table layout
-    sf::Vector2f startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 30.f};
+    sf::Vector2f startPos = GridConfig::getGridPosition(5, 0) + sf::Vector2f{10.f, 0.f};
     float cellWidth = 40.f;
     float cellHeight = 25.f;
 
@@ -273,7 +273,7 @@ void UIManager::generateTruthTable() const {
     for (char var : varList) {
         sf::Text text(*currentFont);
         text.setString(std::string(1, var));
-        text.setCharacterSize(16);
+        text.setCharacterSize(20);
         text.setFillColor(sf::Color(0, 0, 150));
         text.setStyle(sf::Text::Bold);
         text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
@@ -285,7 +285,7 @@ void UIManager::generateTruthTable() const {
     for (size_t i = 0; i < validExpressions.size(); i++) {
         sf::Text text(*currentFont);
         text.setString("Y" + std::to_string(i + 1));
-        text.setCharacterSize(16);
+        text.setCharacterSize(20);
         text.setFillColor(sf::Color(0, 0, 150));
         text.setStyle(sf::Text::Bold);
         text.setPosition(sf::Vector2f(x + cellWidth / 2 - 8.f, y));
@@ -308,7 +308,7 @@ void UIManager::generateTruthTable() const {
 
             sf::Text text(*currentFont);
             text.setString(value ? "1" : "0");
-            text.setCharacterSize(16);
+            text.setCharacterSize(20);
             text.setFillColor(sf::Color::Black);
             text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
             truthTableTexts.push_back(text);
@@ -321,7 +321,7 @@ void UIManager::generateTruthTable() const {
 
             sf::Text text(*currentFont);
             text.setString(output ? "1" : "0");
-            text.setCharacterSize(16);
+            text.setCharacterSize(20);
             text.setFillColor(sf::Color::Black);
             text.setPosition(sf::Vector2f(x + cellWidth / 2 - 5.f, y));
             truthTableTexts.push_back(text);
