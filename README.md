@@ -1,6 +1,6 @@
 # Digital Logic Circuit Simulator
 
-A digital logic circuit simulator built with SFML for creating and analyzing logic circuits.
+A digital logic circuit simulator built with SFML-3.0.0 for creating and analyzing logic circuits.
 
 **Object-Oriented Programming (C++) Project**
 **Supervised by:** Mr. Daya Sagar Baral

@@ -104,7 +104,6 @@ void Simulator::handleEvent(const sf::Event &event, const sf::RenderWindow &wind
                     inp.pop_back();
                 } else if (c == '\r') {
                     if (!inp.empty()) {
-                        // Process the entered expression using the UI's expression simplifier
                         std::vector<std::string> singleExpression = {inp};
                         ui.processMultipleOutputs(singleExpression);
                     }
@@ -122,7 +121,6 @@ void Simulator::update() {
     circuit.updateWirePositions();
     circuit.evaluateCircuit();
 
-    // Automatically update UI with current circuit expression
     ui.updateFromCircuit(circuit);
 }
 
@@ -139,15 +137,9 @@ void Simulator::draw(sf::RenderWindow &window) const {
 
 void Simulator::drawUI(sf::RenderWindow &window) const { ui.drawUI(window); }
 
-void Simulator::generateTruthTable() {
-    // Generate truth table using the circuit and display via UI
-    ui.updateFromCircuit(circuit);
-}
+void Simulator::generateTruthTable() { ui.updateFromCircuit(circuit); }
 
-void Simulator::generateLogicalExpression() {
-    // New flow: Circuit.cpp provides exact equation, passes to ExpressionSimplifier, displays from UIManager
-    ui.updateFromCircuit(circuit);
-}
+void Simulator::generateLogicalExpression() { UIManager ui.updateFromCircuit(circuit); }
 
 void Simulator::clearCircuit() {
     circuit.clearCircuit();
@@ -163,9 +155,4 @@ void Simulator::setFont(const sf::Font &font) {
     circuit.setFont(font);
 }
 
-void Simulator::toggleInputField(int expressionNumber) { ui.toggleInputField(expressionNumber); }
-
-void Simulator::generateExpressionTruthTable() {
-    // Generate expression truth table using current circuit
-    ui.updateFromCircuit(circuit);
-}
+void Simulator::generateExpressionTruthTable() { ui.updateFromCircuit(circuit); }

@@ -22,10 +22,6 @@ void App::processEvents() {
             window.close();
         } else if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
             switch (key->scancode) {
-                case sf::Keyboard::Scancode::O:
-                    simulator.generateTruthTable();
-                    simulator.generateLogicalExpression();
-                    break;
                 case sf::Keyboard::Scancode::C:
                     simulator.clearCircuit();
                     break;
