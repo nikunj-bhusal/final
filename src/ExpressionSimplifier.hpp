@@ -6,7 +6,6 @@
 
 class ExpressionSimplifier {
    private:
-    // Helper structures for K-map simplification
     struct MinTerm {
         int value;
         std::vector<int> variables;
