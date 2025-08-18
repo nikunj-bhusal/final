@@ -12,16 +12,24 @@ std::string ExpressionSimplifier::simplifyExpression(const std::string& expressi
     }
 
     std::string standardForm = convertToStandardForm(expression);
+
+    if (standardForm.find('^') != std::string::npos) {
+        std::set<char> variables = getVariables(standardForm);
+        size_t xorCount = std::count(standardForm.begin(), standardForm.end(), '^');
+
+        if (variables.size() <= 3 && xorCount >= 1 && standardForm.find('+') == std::string::npos && standardForm.find('.') == std::string::npos) {
+            return standardForm;
+        }
+    }
+
     int numVars = getVariableCount(standardForm);
 
     if (numVars == 0) {
         return expression;
     }
 
-    // Generate truth table
     std::vector<std::vector<int>> truthTable = generateTruthTable(standardForm, numVars);
 
-    // Extract minterms (rows where output is 1)
     std::vector<int> minterms = extractMinterms(truthTable);
 
     if (minterms.empty()) {
@@ -32,7 +40,6 @@ std::string ExpressionSimplifier::simplifyExpression(const std::string& expressi
         return "1";
     }
 
-    // Apply Quine-McCluskey algorithm
     return quineMcCluskey(minterms, numVars, standardForm);
 }
 
@@ -56,7 +63,6 @@ std::vector<std::string> ExpressionSimplifier::generateTruthTableDisplay(const s
     std::vector<char> varList(variables.begin(), variables.end());
     std::sort(varList.begin(), varList.end());
 
-    // Create header
     std::string header = "|";
     for (char var : varList) {
         header += " " + std::string(1, var) + " |";
@@ -64,7 +70,6 @@ std::vector<std::string> ExpressionSimplifier::generateTruthTableDisplay(const s
     header += " Output |";
     result.push_back(header);
 
-    // Create separator
     std::string separator = "|";
     for (size_t i = 0; i < varList.size(); i++) {
         separator += "---|";
@@ -72,7 +77,6 @@ std::vector<std::string> ExpressionSimplifier::generateTruthTableDisplay(const s
     separator += "--------|";
     result.push_back(separator);
 
-    // Generate truth table rows
     int numRows = 1 << numVars;
     for (int i = 0; i < numRows; i++) {
         std::map<char, bool> values;
@@ -101,7 +105,6 @@ std::vector<std::string> ExpressionSimplifier::generateMultiOutputTruthTable(con
         return result;
     }
 
-    // Find all unique variables across all expressions
     std::set<char> allVariables;
     std::vector<std::string> validExpressions;
 
@@ -122,7 +125,6 @@ std::vector<std::string> ExpressionSimplifier::generateMultiOutputTruthTable(con
     std::sort(varList.begin(), varList.end());
     int numVars = static_cast<int>(varList.size());
 
-    // Create header
     std::string header = "|";
     for (char var : varList) {
         header += " " + std::string(1, var) + " |";
@@ -132,7 +134,6 @@ std::vector<std::string> ExpressionSimplifier::generateMultiOutputTruthTable(con
     }
     result.push_back(header);
 
-    // Create separator
     std::string separator = "|";
     for (size_t i = 0; i < varList.size(); i++) {
         separator += "---|";
@@ -142,13 +143,11 @@ std::vector<std::string> ExpressionSimplifier::generateMultiOutputTruthTable(con
     }
     result.push_back(separator);
 
-    // Generate truth table rows
     int numRows = 1 << numVars;
     for (int i = 0; i < numRows; i++) {
         std::map<char, bool> values;
         std::string row = "|";
 
-        // Set variable values for this row
         for (int j = 0; j < numVars; j++) {
             char var = varList[j];
             bool value = (i >> (numVars - 1 - j)) & 1;
@@ -156,7 +155,6 @@ std::vector<std::string> ExpressionSimplifier::generateMultiOutputTruthTable(con
             row += " " + std::string(value ? "1" : "0") + " |";
         }
 
-        // Evaluate each expression
         for (const std::string& expr : validExpressions) {
             bool output = evaluateExpression(convertToStandardForm(expr), values);
             row += "  " + std::string(output ? "1" : "0") + "  |";
@@ -212,10 +210,8 @@ std::string ExpressionSimplifier::quineMcCluskey(const std::vector<int>& minterm
         return "0";
     }
 
-    // Find prime implicants
     std::vector<Implicant> primeImplicants = findPrimeImplicants(minterms, numVars);
 
-    // Generate simplified expression with actual variables from the expression
     return generateSimplifiedExpression(primeImplicants, minterms, numVars, expression);
 }
 
@@ -254,7 +250,6 @@ std::vector<ExpressionSimplifier::Implicant> ExpressionSimplifier::findPrimeImpl
                         nextGroups[i].emplace_back(newTerms, newPattern);
                         combined = true;
 
-                        // Mark as used
                         const_cast<Implicant&>(imp1).used = true;
                         const_cast<Implicant&>(imp2).used = true;
                     }
@@ -262,7 +257,6 @@ std::vector<ExpressionSimplifier::Implicant> ExpressionSimplifier::findPrimeImpl
             }
         }
 
-        // Add unused implicants as prime implicants
         for (const auto& group : currentGroups) {
             for (const auto& imp : group) {
                 if (!imp.used) {
@@ -287,7 +281,6 @@ std::string ExpressionSimplifier::generateSimplifiedExpression(const std::vector
         return "0";
     }
 
-    // Get variables from the actual expression instead of hardcoded string
     std::set<char> variables = getVariables(expression);
     std::vector<char> varList(variables.begin(), variables.end());
     std::sort(varList.begin(), varList.end());
@@ -386,11 +379,7 @@ int ExpressionSimplifier::getVariableCount(const std::string& expression) const 
 std::string ExpressionSimplifier::convertToStandardForm(const std::string& expression) const {
     std::string result = expression;
 
-    // Remove spaces
     result.erase(std::remove(result.begin(), result.end(), ' '), result.end());
-
-    // Convert operators to standard form
-    std::replace(result.begin(), result.end(), '^', '+');  // XOR to OR for simplification
 
     return result;
 }
@@ -398,7 +387,6 @@ std::string ExpressionSimplifier::convertToStandardForm(const std::string& expre
 bool ExpressionSimplifier::evaluateExpression(const std::string& expression, const std::map<char, bool>& values) const {
     std::string expr = expression;
 
-    // Replace variables with their values
     for (const auto& pair : values) {
         std::string var(1, pair.first);
         std::string val = pair.second ? "1" : "0";
@@ -410,8 +398,6 @@ bool ExpressionSimplifier::evaluateExpression(const std::string& expression, con
         }
     }
 
-    // Simple evaluation for basic expressions
-    // This is a simplified evaluator - in a full implementation, you'd want a proper parser
     std::stack<bool> operands;
     std::stack<char> operators;
 
@@ -430,7 +416,6 @@ bool ExpressionSimplifier::evaluateExpression(const std::string& expression, con
                 } else if (expr[i] == '0') {
                     operands.push(true);
                 } else if (expr[i] == '(') {
-                    // Handle negation of parenthesized expression
                     int parenCount = 1;
                     size_t start = i + 1;
                     i++;
@@ -491,7 +476,7 @@ bool ExpressionSimplifier::evaluateExpression(const std::string& expression, con
                 }
             }
             if (!operators.empty()) {
-                operators.pop();  // Remove '('
+                operators.pop();
             }
         }
     }
@@ -524,7 +509,6 @@ bool ExpressionSimplifier::isValidExpression(const std::string& expression) cons
         return false;
     }
 
-    // Check for valid characters
     for (char c : expression) {
         if (!(std::isalpha(c) || c == '.' || c == '+' || c == '^' || c == '~' || c == '(' || c == ')' || c == ' ' || c == '0' || c == '1')) {
             return false;
