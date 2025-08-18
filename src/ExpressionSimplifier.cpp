@@ -28,10 +28,8 @@ std::string ExpressionSimplifier::simplifyExpression(const std::string& expressi
         return expression;
     }
 
-    // Step 1: Generate the truth table for the expression
     std::vector<std::vector<int>> truthTable = generateTruthTable(standardForm, numVars);
 
-    // Step 2: Extract minterms (rows where output is 1)
     std::vector<int> minterms = extractMinterms(truthTable);
 
     if (minterms.empty()) {
@@ -42,7 +40,6 @@ std::string ExpressionSimplifier::simplifyExpression(const std::string& expressi
         return "1";
     }
 
-    // Step 3: Apply Quine-McCluskey minimization
     return quineMcCluskey(minterms, numVars, standardForm);
 }
 
@@ -213,17 +210,14 @@ std::string ExpressionSimplifier::quineMcCluskey(const std::vector<int>& minterm
         return "0";
     }
 
-    // Step 4: Find all prime implicants by combining minterms
     std::vector<Implicant> primeImplicants = findPrimeImplicants(minterms, numVars);
 
-    // Step 5: Generate the minimized expression using the prime implicants
     return generateSimplifiedExpression(primeImplicants, minterms, numVars, expression);
 }
 
 std::vector<std::vector<ExpressionSimplifier::Implicant>> ExpressionSimplifier::groupByOnes(const std::vector<int>& minterms, int numVars) const {
     std::vector<std::vector<Implicant>> groups(numVars + 1);
 
-    // Step 2: Group minterms by the number of 1s in their binary representation
     for (int minterm : minterms) {
         std::string binary = "";
         for (int i = numVars - 1; i >= 0; i--) {
@@ -241,7 +235,6 @@ std::vector<ExpressionSimplifier::Implicant> ExpressionSimplifier::findPrimeImpl
     std::vector<std::vector<Implicant>> currentGroups = groupByOnes(minterms, numVars);
     std::vector<Implicant> primeImplicants;
 
-    // Step 3: Iteratively combine minterms that differ by one bit
     while (true) {
         std::vector<std::vector<Implicant>> nextGroups(numVars + 1);
         bool combined = false;
@@ -264,7 +257,6 @@ std::vector<ExpressionSimplifier::Implicant> ExpressionSimplifier::findPrimeImpl
             }
         }
 
-        // Step 4: Collect uncombined terms as prime implicants
         for (const auto& group : currentGroups) {
             for (const auto& imp : group) {
                 if (!imp.used) {
@@ -289,7 +281,6 @@ std::string ExpressionSimplifier::generateSimplifiedExpression(const std::vector
         return "0";
     }
 
-    // Step 5: Build the minimized Boolean expression from the selected prime implicants
     std::set<char> variables = getVariables(expression);
     std::vector<char> varList(variables.begin(), variables.end());
     std::sort(varList.begin(), varList.end());

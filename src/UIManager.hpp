@@ -7,7 +7,6 @@
 
 #include "ExpressionSimplifier.hpp"
 
-// Forward declarations
 class Circuit;
 
 class UIManager {
@@ -21,7 +20,6 @@ class UIManager {
     std::string inputExpression2;
     int activeExpressionField = 1;
 
-    // ExpressionSimplifier for processing expressions
     std::unique_ptr<ExpressionSimplifier> expressionSimplifier;
 
     bool showTruthTable = false;
@@ -108,7 +106,6 @@ class UIManager {
     const std::vector<std::string>& getTruthTable() const { return truthTable; }
     void setTruthTable(const std::vector<std::string>& table) { truthTable = table; }
 
-    // New methods for circuit integration
     void updateFromCircuit(const Circuit& circuit);
     void processMultipleOutputs(const std::vector<std::string>& outputEquations);
 };
